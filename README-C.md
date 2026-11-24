@@ -8,7 +8,7 @@
 
 ## 一、前後端是如何連起來的？（核心通訊原理）
 
-![WebUI 核心運作原理](docs/images/webui_architecture.png)
+![WebUI 核心運作原理](docs/images/webui_architecture.jpg)
 
 你可以把 WebUI 想像成**「在自己電腦上開一個只有你自己看得到的迷你網站」**：
 
@@ -25,7 +25,7 @@
 
 ## 二、為什麼它比 Electron 輕這麼多？（打包體積差異）
 
-![桌面程式架構對比：Electron vs. WebUI](docs/images/webui_vs_electron.png)
+![桌面程式架構對比：Electron vs. WebUI](docs/images/webui_vs_electron.jpg)
 
 * **傳統 Electron 架構（左邊）：**
   為了確保每台電腦都能顯示網頁介面，它把**「一整套 Chromium 瀏覽器核心 + Node.js」直接塞進安裝檔裡**。就算只寫一個簡單的「Hello World」視窗，打包體積也是 100MB 起跳。
