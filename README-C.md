@@ -46,3 +46,36 @@
 **支援**，兩種實作方式：
 * **原生編譯 TLS 版本：** 編譯 WebUI 時加入 `WEBUI_USE_TLS=1` 連結 OpenSSL，並於程式中呼叫 `webui_set_tls_certificate()` 載入 PEM 憑證與私鑰。
 * **透過反向代理（Reverse Proxy，推薦）：** 維持 WebUI 本身在 `127.0.0.1` 跑純 HTTP/WS，前端由 **Apache** 或 **Nginx** 掛載 SSL 憑證處理 HTTPS（Port 443），再將 HTTP 與 WebSocket 流量反向代理轉發至本機 WebUI 連接埠。
+
+---
+
+## 四、系統定位與資料庫連線架構（以 Harbour + WebUI 為例）
+
+### 1. 系統定位：Local 桌面應用程式的現代 UI 引擎
+WebUI 的核心定位就是用來開發**本地（Local）桌面應用程式**，本質上是傳統桌面 UI 框架（如 Win32 GUI、FiveWin、GTK、Qt 或 Electron）的輕量級替代品。
+
+### 2. 如何連接遠端資料庫（例如 MySQL）？
+
+![Harbour + WebUI 連接遠端 MySQL 架構圖](docs/images/webui_mysql_architecture.jpg)
+
+**WebUI 本身完全不管資料庫連線**——資料庫是由你的**後端原生程式**直接連接的，前端網頁介面只負責顯示資料與接收使用者操作：
+
+1. **左邊（本機前端畫面）：** 原本用 FiveWin 畫的視窗，現在換成用 HTML5 / CSS3 / JS（例如 `w2ui`、`w2grid`）呈現在 Chrome 或 Edge 視窗裡，只負責顯示介面，完全不接觸資料庫連線細節。
+2. **中間（本機後端執行檔 `.exe`）：** 你的 Harbour `.prg` 商業邏輯、**WebUI 函式庫（數十 KB）** 以及 **MySQL Client 驅動程式**（如 `libmysqlclient` / `libmariadb`）全部編譯打包在同一個 `.exe` 裡。它一邊透過雙向 WebSocket 接收前端按鈕指令，另一邊直接負責跟遠端 MySQL 溝通。
+3. **右邊（遠端伺服器）：** 遠端的 MySQL 資料庫只負責接收中間層 `.exe` 送過來的 SQL 查詢與寫入請求，再把資料交給 Harbour 打包成 JSON 回傳給左邊畫面更新。
+
+> **實務部署資安提醒：**
+> * **內部區網 / VPN 環境：** 後端程式直接透過 `libmysqlclient` 連內網 MySQL IP 即可，效能最佳。
+> * **外部公網環境：** 建議避免直接對公網暴露 MySQL 3306 Port，改在遠端伺服器開一支 HTTP/HTTPS API（如 PHP / Node.js / Go），讓本機的 WebUI 後端程式透過 `libcurl` 呼叫 API 存取資料庫。
+
+### 3. 與 `Harbour + FiveWin` 的架構對照
+
+將原有的 `Harbour + FiveWin` 桌面系統轉換為 `Harbour + WebUI` 時，商業邏輯與資料庫連線程式碼皆無須重寫，僅將 UI 渲染層替換為現代瀏覽器介面：
+
+| 架構層級 | 原本的架構 (`Harbour + FiveWin`) | 新的架構 (`Harbour + WebUI`) |
+| :--- | :--- | :--- |
+| **核心語言與商業邏輯** | Harbour (`.prg` 程式碼) | **完全不變**，依然是 Harbour (`.prg`) |
+| **資料庫讀寫（MySQL / DBF）** | Harbour 直接透過 RDD / `libmysql` 連資料庫 | **完全不變**，依然由 Harbour `.prg` 直接讀寫資料庫 |
+| **UI 介面渲染層** | FiveWin 呼叫 Windows 原生控制項（Dialog、Browse） | **換成 HTML5 / CSS3 / JS**（如 `w2ui`、`w2grid`）交給本機 Chrome/Edge 顯示 |
+| **UI 橋接函式庫** | 連結 `FiveH.lib` / `FiveHC.lib` | 改連結 **`webui-2-static.lib`（或 `webui-2.dll`）** + 幾支 C89 介面包裝函數 |
+| **最終發布產物** | 單一獨立 `.exe`（搭配 `libmysql.dll` 等） | **同樣是單一獨立 `.exe`**（體積幾乎不變，多一個 `webui-2.dll` 或直接靜態編入） |
