@@ -71,10 +71,10 @@ otherwise `show` returns .F. after about 20 s (first attempt, discarded; the con
 
 Three runs on the same tree:
 
-- Run 1 (`w1-O2-run1.log`): static checks, A13 pass. O2 mode hrb 297 ok. O2 mode linked **2 not ok** (`[exit] show returns .T. (browser started)` and
+- Run 1 (`w1-O2-run1-log.txt`): static checks, A13 pass. O2 mode hrb 297 ok. O2 mode linked **2 not ok** (`[exit] show returns .T. (browser started)` and
   `[exit] page ran to the end and reported`, tests 195 and 196), so mode bodies differ (`w1-O2-run1-linked-FAILED.tap`, `w1-O2-run1-diff.txt`).
   This run directly followed QA's own Chrome/Xvfb sessions that were killed by timeout, and two stale Xvfb servers were still running (found afterwards).
-- Run 2 (`w1-O2-run2.log`) and run 3 (`w1-O2-run3.log`, run after stopping the stale Xvfb processes): ALL PASSED, 297 ok and 0 not ok in both modes, identical TAP bodies.
+- Run 2 (`w1-O2-run2-log.txt`) and run 3 (`w1-O2-run3-log.txt`, run after stopping the stale Xvfb processes): ALL PASSED, 297 ok and 0 not ok in both modes, identical TAP bodies.
 
 Result: pass on 2 of 3 runs. The one failure is a browser start failure in the GUI part of the `[exit]` scenario. The cause
 was not established (QA-side interference is likely but not proven), so it is recorded as a possible flake and not as an F1 regression.
