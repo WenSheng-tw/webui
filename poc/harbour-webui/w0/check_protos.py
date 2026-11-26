@@ -19,6 +19,7 @@ import sys
 import hdrparse
 
 HERE = hdrparse.HERE
+SRC = os.path.join(HERE, "..", "src")
 
 ENUM_PREFIX = {
     "webui_config": ("BRIDGE_CFG_", ""),
@@ -74,7 +75,7 @@ def main():
 
     # A3: enum drift
     enums = hdrparse.header_enums()
-    consts = read_consts(os.path.join(HERE, "bridge_consts.h"))
+    consts = read_consts(os.path.join(SRC, "bridge_consts.h"))
     expected = {}
     for tag in ENUM_PREFIX:
         for name, val in enums[tag]:
@@ -95,7 +96,7 @@ def main():
     protos = [p for p, _ in header]
     rows = hdrparse.read_functions()
     excluded = set(r[0] for r in rows if r[1] == "EXCLUDED")
-    decls = hdrparse.decl_protos(os.path.join(HERE, "bridge_decl.h"))
+    decls = hdrparse.decl_protos(os.path.join(SRC, "bridge_decl.h"))
     decls_i64 = hdrparse.decl_protos(os.path.join(HERE, "abi_i64.c"))
     overlap = sorted(set(decls) & set(decls_i64))
     ok(not overlap, "A4 no function declared in both bridge_decl.h and abi_i64.c", overlap)

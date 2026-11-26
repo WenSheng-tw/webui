@@ -12,9 +12,11 @@ CC := gcc
 endif
 WARN := -Wall -Wextra
 
-C89 := -std=c89 -pedantic-errors $(WARN) -I.
-C99 := -std=c99 $(WARN) -I$(REPO)/include -I.
-I64 := -std=c99 -pedantic-errors $(WARN) -I.
+SRC := ../src
+
+C89 := -std=c89 -pedantic-errors $(WARN) -I. -I$(SRC)
+C99 := -std=c99 $(WARN) -I$(REPO)/include -I. -I$(SRC)
+I64 := -std=c99 -pedantic-errors $(WARN) -I. -I$(SRC)
 
 OPT_O0 := -O0 -g
 OPT_O2 := -O2 -g
@@ -48,11 +50,11 @@ static-checks: abi_enums_gen.h
 define VARIANT_RULES
 build-$(1): build/$(1)/abi_test
 
-build/$(1)/abi_bridge.o: abi_bridge.c bridge_decl.h bridge_consts.h bridge_num.h
+build/$(1)/abi_bridge.o: abi_bridge.c $(SRC)/bridge_decl.h $(SRC)/bridge_consts.h $(SRC)/bridge_num.h
 	@mkdir -p build/$(1)
 	$$(CC) $$(C89) $$(OPT_$(1)) -c abi_bridge.c -o $$@
 
-build/$(1)/abi_real.o: abi_real.c bridge_consts.h abi_enums_gen.h $(REPO)/include/webui.h
+build/$(1)/abi_real.o: abi_real.c $(SRC)/bridge_consts.h abi_enums_gen.h $(REPO)/include/webui.h
 	@mkdir -p build/$(1)
 	$$(CC) $$(C99) $$(OPT_$(1)) -c abi_real.c -o $$@
 
