@@ -1,0 +1,349 @@
+TAP version 13
+# mode 1 (linked), suite all, Harbour 3.2.0 (r2607071000)
+# headless suite
+ok 1 - rule 7: WEBUI_SET_TLS_CERTIFICATE is not exposed in W1
+ok 2 - all W1 names resolve (spot check)
+ok 3 - size_t conversion accepts 0, 1, 65535
+ok 4 - size_t conversion accepts 2^53
+ok 5 - size_t conversion rejects 2^53 + 2
+ok 6 - size_t conversion rejects 2^64
+ok 7 - size_t conversion rejects -1
+ok 8 - size_t conversion rejects 1.5
+ok 9 - size_t conversion rejects NaN
+ok 10 - size_t conversion rejects +inf and -inf
+ok 11 - rule 9 window size accepts 100x100 and 3840x2160
+ok 12 - rule 9 window size rejects 99, 3841, 2161 and 0
+ok 13 - rule 9 window position accepts 0,0 and 3000,1800
+ok 14 - rule 9 window position rejects 3001 and 1801
+ok 15 - rule 9 window position rejects negative and NaN
+ok 16 - rule 9 script timeout accepts 1 and 86400
+ok 17 - rule 9 script timeout rejects 0 and 86401
+ok 18 - rule 9 argument index accepts 0 and 16, rejects 17
+ok 19 - set_timeout accepts 0
+ok 20 - set_timeout accepts 60
+ok 21 - set_timeout accepts 30
+# set_timeout rejects 61: timeout: out of range 0..60
+ok 22 - set_timeout rejects 61
+# set_timeout rejects -1: timeout: not an integer between 0 and 2^53
+ok 23 - set_timeout rejects -1
+# set_timeout rejects 1.5: timeout: not an integer between 0 and 2^53
+ok 24 - set_timeout rejects 1.5
+# set_timeout rejects 10^300: timeout: not an integer between 0 and 2^53
+ok 25 - set_timeout rejects 10^300
+# set_timeout rejects 2^53 + 2: timeout: not an integer between 0 and 2^53
+ok 26 - set_timeout rejects 2^53 + 2
+# set_timeout rejects NaN: timeout: not an integer between 0 and 2^53
+ok 27 - set_timeout rejects NaN
+# set_timeout rejects infinity: timeout: not an integer between 0 and 2^53
+ok 28 - set_timeout rejects infinity
+# set_timeout rejects a string: timeout: a number is required
+ok 29 - set_timeout rejects a string
+# set_timeout rejects NIL: timeout: a number is required
+ok 30 - set_timeout rejects NIL
+# set_timeout rejects a missing argument: timeout: a number is required
+ok 31 - set_timeout rejects a missing argument
+ok 32 - set_config accepts show_wait_connection
+ok 33 - set_config accepts ui_event_blocking (rule 6)
+ok 34 - set_config accepts folder_monitor
+ok 35 - set_config accepts multi_client
+ok 36 - set_config accepts use_cookies
+# set_config rejects asynchronous_response (bridge owned, rule 3): option: asynchronous_response is managed by the bridge
+ok 37 - set_config rejects asynchronous_response (bridge owned, rule 3)
+# set_config rejects option 6: option: out of range 0..5
+ok 38 - set_config rejects option 6
+# set_config rejects option -1: option: not an integer between 0 and 2^53
+ok 39 - set_config rejects option -1
+# set_config rejects option 1.5: option: not an integer between 0 and 2^53
+ok 40 - set_config rejects option 1.5
+# set_config rejects option NaN: option: not an integer between 0 and 2^53
+ok 41 - set_config rejects option NaN
+# set_config rejects a numeric status: a logical value is required
+ok 42 - set_config rejects a numeric status
+# set_config rejects a string status: a logical value is required
+ok 43 - set_config rejects a string status
+# set_config rejects a missing status: a logical value is required
+ok 44 - set_config rejects a missing status
+# set_config rejects missing arguments: option: a number is required
+ok 45 - set_config rejects missing arguments
+ok 46 - new_window returns a positive integer
+ok 47 - second new_window returns a different id
+ok 48 - new_window marks WebUI as used (clean has work to do)
+# bind rejects window 0: window id: out of range 1..65535
+ok 49 - bind rejects window 0
+# bind rejects window -1: window id: not an integer between 0 and 2^53
+ok 50 - bind rejects window -1
+# bind rejects window 65536: window id: out of range 1..65535
+ok 51 - bind rejects window 65536
+# bind rejects window 1.5: window id: not an integer between 0 and 2^53
+ok 52 - bind rejects window 1.5
+# bind rejects window NaN: window id: not an integer between 0 and 2^53
+ok 53 - bind rejects window NaN
+# bind rejects a string window: window id: a number is required
+ok 54 - bind rejects a string window
+# bind rejects a numeric element: element: a string is required
+ok 55 - bind rejects a numeric element
+# bind rejects a NIL handler: handler: a string is required
+ok 56 - bind rejects a NIL handler
+# bind rejects an empty handler name: handler: a function name of 1 to 64 characters is required
+ok 57 - bind rejects an empty handler name
+# bind rejects an unknown handler name: handler: not a Harbour function (add REQUEST) or bind failed
+ok 58 - bind rejects an unknown handler name
+# bind rejects a handler name of 65 characters: handler: a function name of 1 to 64 characters is required
+ok 59 - bind rejects a handler name of 65 characters
+# bind rejects a missing handler: handler: a string is required
+ok 60 - bind rejects a missing handler
+ok 61 - failed binds leave the handler table empty
+ok 62 - bind returns a positive integer id
+ok 63 - bind adds one handler table entry
+ok 64 - a second element gets another bind id; the handler name is case-insensitive
+ok 65 - bind accepts the empty element (all events)
+ok 66 - bind works on a second window
+ok 67 - handler table holds every successful bind
+ok 68 - PoC-001 name WEBUI_BINDHB still binds
+ok 69 - WEBUI_BINDHB returns 0 instead of raising on bad input
+ok 70 - PoC-001 name WEBUI_NEWWINDOW still creates a window
+# show rejects window 0: window id: out of range 1..65535
+ok 71 - show rejects window 0
+# show rejects a negative window: window id: not an integer between 0 and 2^53
+ok 72 - show rejects a negative window
+# show rejects window 70000: window id: out of range 1..65535
+ok 73 - show rejects window 70000
+# show rejects window NaN: window id: not an integer between 0 and 2^53
+ok 74 - show rejects window NaN
+# show rejects window 2^64: window id: not an integer between 0 and 2^53
+ok 75 - show rejects window 2^64
+# show rejects NIL content: content: a string is required
+ok 76 - show rejects NIL content
+# show rejects numeric content: content: a string is required
+ok 77 - show rejects numeric content
+# show rejects missing content: content: a string is required
+ok 78 - show rejects missing content
+# show rejects content with a NUL byte: content: must not contain a NUL byte
+ok 79 - show rejects content with a NUL byte
+# close rejects window 0: window id: out of range 1..65535
+ok 80 - close rejects window 0
+# close rejects window 65536: window id: out of range 1..65535
+ok 81 - close rejects window 65536
+# close rejects NaN: window id: not an integer between 0 and 2^53
+ok 82 - close rejects NaN
+# close rejects a string: window id: a number is required
+ok 83 - close rejects a string
+# close rejects a missing argument: window id: a number is required
+ok 84 - close rejects a missing argument
+ok 85 - close of a window that was never shown does nothing
+# get_string outside a handler raises: WEBUI_GET_STRING is valid only inside a bound handler
+ok 86 - get_string outside a handler raises
+# return_string outside a handler raises: WEBUI_RETURN_STRING is valid only inside a bound handler
+ok 87 - return_string outside a handler raises
+# unknown bridge statistic raises: statistic: unknown name
+ok 88 - unknown bridge statistic raises
+ok 89 - wait_async returns .F. before the first show
+ok 90 - wait returns at once before the first show
+ok 91 - pump with an empty queue dispatches nothing
+ok 92 - exit without a shown window does not hang
+ok 93 - clean after exit reports that it cleaned
+ok 94 - clean empties the handler table and frees every bridge allocation
+ok 95 - a second clean is a no-op
+ok 96 - bridge allocation and free counts are equal
+ok 97 - new_window works after exit and clean (rebuild without show)
+ok 98 - bind works after clean
+ok 99 - clean after rebuild cleans again
+ok 100 - no bridge memory is left after the second clean
+# gui suite
+ok 101 - test page tests/w1_page.html is readable
+ok 102 - [async+generic] new_window
+ok 103 - [async+generic] bind: every handler bound
+ok 104 - [async+generic] bind: handler table holds exactly the binds of this window
+# [async+generic] show returned .T. after 262 ms, window 1
+ok 105 - [async+generic] show returns .T. (browser started)
+ok 106 - [async+generic] wait_async returns .F. after the window closed
+# [async+generic] run took 3854 ms
+# [async+generic] bridge: dispatched 53, auto answers 1, missing handlers 0
+ok 107 - [async+generic] page ran to the end and reported
+ok 108 - [async+generic] page reported no JavaScript error
+ok 109 - [async+generic] bound call returns the handler's RETURN string
+ok 110 - [async+generic] handler parameters: window id, bind id, event number
+ok 111 - [async+generic] handler parameter: event type is CALLBACK
+ok 112 - [async+generic] get_string equals the handler's first parameter
+ok 113 - [async+generic] return_string delivers a UTF-8 answer unchanged
+ok 114 - [async+generic] return_string reports that the answer was accepted
+ok 115 - [async+generic] handler RETURN string is the answer when return_string is not called
+ok 116 - [async+generic] handler returning NIL answers with an empty string
+ok 117 - [async+generic] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 118 - [async+generic] call without argument: parameter and get_string are empty
+ok 119 - [async+generic] a 20000 character argument arrives complete
+ok 120 - [async+generic] quotes, backslash, newline, tab and markup characters survive both directions
+ok 121 - [async+generic] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 122 - [async+generic] wait inside a handler raises instead of deadlocking
+ok 123 - [async+generic] pump inside a handler dispatches nothing (no re-entry)
+ok 124 - [async+generic] wait_async inside a handler does not re-enter or close the app
+ok 125 - [async+generic] handler that raised and recovered still answers
+ok 126 - [async+generic] 20 sequential calls all answered with their own result
+ok 127 - [async+generic] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 128 - [async+generic] 20 concurrent calls: every call reached the handler exactly once
+ok 129 - [async+generic] no call reached an unknown handler
+ok 130 - [async+generic] generic bind saw the CONNECTED event
+# [async+generic] generic bind event types: [1,0]
+ok 131 - [async+generic] event queue is empty after the run
+ok 132 - [async+generic] clean (non-callback context, after wait) cleans
+ok 133 - [async+generic] clean: handler table freed, nothing pending
+ok 134 - [async+generic] clean: no bridge-owned memory is left
+ok 135 - [async+generic] second clean is a no-op
+ok 136 - [wait] new_window
+ok 137 - [wait] bind: every handler bound
+ok 138 - [wait] bind: handler table holds exactly the binds of this window
+# [wait] show returned .T. after 282 ms, window 1
+ok 139 - [wait] show returns .T. (browser started)
+ok 140 - [wait] wait returned
+# [wait] run took 3003 ms
+# [wait] bridge: dispatched 104, auto answers 2, missing handlers 0
+ok 141 - [wait] page ran to the end and reported
+ok 142 - [wait] page reported no JavaScript error
+ok 143 - [wait] bound call returns the handler's RETURN string
+ok 144 - [wait] handler parameters: window id, bind id, event number
+ok 145 - [wait] handler parameter: event type is CALLBACK
+ok 146 - [wait] get_string equals the handler's first parameter
+ok 147 - [wait] return_string delivers a UTF-8 answer unchanged
+ok 148 - [wait] return_string reports that the answer was accepted
+ok 149 - [wait] handler RETURN string is the answer when return_string is not called
+ok 150 - [wait] handler returning NIL answers with an empty string
+ok 151 - [wait] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 152 - [wait] call without argument: parameter and get_string are empty
+ok 153 - [wait] a 20000 character argument arrives complete
+ok 154 - [wait] quotes, backslash, newline, tab and markup characters survive both directions
+ok 155 - [wait] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 156 - [wait] wait inside a handler raises instead of deadlocking
+ok 157 - [wait] pump inside a handler dispatches nothing (no re-entry)
+ok 158 - [wait] wait_async inside a handler does not re-enter or close the app
+ok 159 - [wait] handler that raised and recovered still answers
+ok 160 - [wait] 20 sequential calls all answered with their own result
+ok 161 - [wait] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 162 - [wait] 20 concurrent calls: every call reached the handler exactly once
+ok 163 - [wait] no call reached an unknown handler
+ok 164 - [wait] event queue is empty after the run
+ok 165 - [wait] clean (non-callback context, after wait) cleans
+ok 166 - [wait] clean: handler table freed, nothing pending
+ok 167 - [wait] clean: no bridge-owned memory is left
+ok 168 - [wait] second clean is a no-op
+ok 169 - [exit] new_window
+ok 170 - [exit] bind: every handler bound
+ok 171 - [exit] bind: handler table holds exactly the binds of this window
+# [exit] show returned .T. after 284 ms, window 1
+ok 172 - [exit] show returns .T. (browser started)
+ok 173 - [exit] wait returned
+# [exit] run took 1994 ms
+# [exit] bridge: dispatched 155, auto answers 4, missing handlers 0
+ok 174 - [exit] page ran to the end and reported
+ok 175 - [exit] page reported no JavaScript error
+ok 176 - [exit] bound call returns the handler's RETURN string
+ok 177 - [exit] handler parameters: window id, bind id, event number
+ok 178 - [exit] handler parameter: event type is CALLBACK
+ok 179 - [exit] get_string equals the handler's first parameter
+ok 180 - [exit] return_string delivers a UTF-8 answer unchanged
+ok 181 - [exit] return_string reports that the answer was accepted
+ok 182 - [exit] handler RETURN string is the answer when return_string is not called
+ok 183 - [exit] handler returning NIL answers with an empty string
+ok 184 - [exit] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 185 - [exit] call without argument: parameter and get_string are empty
+ok 186 - [exit] a 20000 character argument arrives complete
+ok 187 - [exit] quotes, backslash, newline, tab and markup characters survive both directions
+ok 188 - [exit] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 189 - [exit] wait inside a handler raises instead of deadlocking
+ok 190 - [exit] pump inside a handler dispatches nothing (no re-entry)
+ok 191 - [exit] wait_async inside a handler does not re-enter or close the app
+ok 192 - [exit] handler that raised and recovered still answers
+ok 193 - [exit] 20 sequential calls all answered with their own result
+ok 194 - [exit] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 195 - [exit] 20 concurrent calls: every call reached the handler exactly once
+ok 196 - [exit] no call reached an unknown handler
+ok 197 - [exit] event queue is empty after the run
+ok 198 - [exit] clean (non-callback context, after wait) cleans
+ok 199 - [exit] clean: handler table freed, nothing pending
+ok 200 - [exit] clean: no bridge-owned memory is left
+ok 201 - [exit] second clean is a no-op
+ok 202 - [clean] new_window
+ok 203 - [clean] bind: every handler bound
+ok 204 - [clean] bind: handler table holds exactly the binds of this window
+# [clean] show returned .T. after 261 ms, window 1
+ok 205 - [clean] show returns .T. (browser started)
+ok 206 - [clean] wait returned
+# [clean] run took 1974 ms
+# [clean] bridge: dispatched 206, auto answers 6, missing handlers 0
+ok 207 - [clean] page ran to the end and reported
+ok 208 - [clean] page reported no JavaScript error
+ok 209 - [clean] bound call returns the handler's RETURN string
+ok 210 - [clean] handler parameters: window id, bind id, event number
+ok 211 - [clean] handler parameter: event type is CALLBACK
+ok 212 - [clean] get_string equals the handler's first parameter
+ok 213 - [clean] return_string delivers a UTF-8 answer unchanged
+ok 214 - [clean] return_string reports that the answer was accepted
+ok 215 - [clean] handler RETURN string is the answer when return_string is not called
+ok 216 - [clean] handler returning NIL answers with an empty string
+ok 217 - [clean] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 218 - [clean] call without argument: parameter and get_string are empty
+ok 219 - [clean] a 20000 character argument arrives complete
+ok 220 - [clean] quotes, backslash, newline, tab and markup characters survive both directions
+ok 221 - [clean] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 222 - [clean] wait inside a handler raises instead of deadlocking
+ok 223 - [clean] pump inside a handler dispatches nothing (no re-entry)
+ok 224 - [clean] wait_async inside a handler does not re-enter or close the app
+ok 225 - [clean] handler that raised and recovered still answers
+ok 226 - [clean] 20 sequential calls all answered with their own result
+ok 227 - [clean] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 228 - [clean] 20 concurrent calls: every call reached the handler exactly once
+ok 229 - [clean] no call reached an unknown handler
+ok 230 - [clean] rule 5: clean inside a handler only exits (returns .F.)
+ok 231 - [clean] rule 5: clean inside a handler records that a clean is owed
+ok 232 - [clean] rule 5: handler table is intact inside the handler
+ok 233 - [clean] rule 5: handler table is still intact after wait returned
+ok 234 - [clean] rule 5: the owed clean is still pending after wait
+ok 235 - [clean] event queue is empty after the run
+ok 236 - [clean] clean (non-callback context, after wait) cleans
+ok 237 - [clean] clean: handler table freed, nothing pending
+ok 238 - [clean] clean: no bridge-owned memory is left
+ok 239 - [clean] second clean is a no-op
+ok 240 - [async+nowait] new_window
+ok 241 - [async+nowait] bind: every handler bound
+ok 242 - [async+nowait] bind: handler table holds exactly the binds of this window
+# [async+nowait] show returned .T. after 39 ms, window 1
+ok 243 - [async+nowait] show returns .T. (browser started)
+ok 244 - [async+nowait] wait_async returns .F. after the window closed
+# [async+nowait] run took 4056 ms
+# [async+nowait] bridge: dispatched 257, auto answers 7, missing handlers 0
+ok 245 - [async+nowait] page ran to the end and reported
+ok 246 - [async+nowait] page reported no JavaScript error
+ok 247 - [async+nowait] bound call returns the handler's RETURN string
+ok 248 - [async+nowait] handler parameters: window id, bind id, event number
+ok 249 - [async+nowait] handler parameter: event type is CALLBACK
+ok 250 - [async+nowait] get_string equals the handler's first parameter
+ok 251 - [async+nowait] return_string delivers a UTF-8 answer unchanged
+ok 252 - [async+nowait] return_string reports that the answer was accepted
+ok 253 - [async+nowait] handler RETURN string is the answer when return_string is not called
+ok 254 - [async+nowait] handler returning NIL answers with an empty string
+ok 255 - [async+nowait] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 256 - [async+nowait] call without argument: parameter and get_string are empty
+ok 257 - [async+nowait] a 20000 character argument arrives complete
+ok 258 - [async+nowait] quotes, backslash, newline, tab and markup characters survive both directions
+ok 259 - [async+nowait] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 260 - [async+nowait] wait inside a handler raises instead of deadlocking
+ok 261 - [async+nowait] pump inside a handler dispatches nothing (no re-entry)
+ok 262 - [async+nowait] wait_async inside a handler does not re-enter or close the app
+ok 263 - [async+nowait] handler that raised and recovered still answers
+ok 264 - [async+nowait] 20 sequential calls all answered with their own result
+ok 265 - [async+nowait] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 266 - [async+nowait] 20 concurrent calls: every call reached the handler exactly once
+ok 267 - [async+nowait] no call reached an unknown handler
+ok 268 - [async+nowait] event queue is empty after the run
+ok 269 - [async+nowait] clean (non-callback context, after wait) cleans
+ok 270 - [async+nowait] clean: handler table freed, nothing pending
+ok 271 - [async+nowait] clean: no bridge-owned memory is left
+ok 272 - [async+nowait] second clean is a no-op
+# cycle 1: live blocks after clean 0, bytes 0
+# cycle 2: live blocks after clean 0, bytes 0
+# cycle 3: live blocks after clean 0, bytes 0
+# cycle 4: live blocks after clean 0, bytes 0
+# cycle 5: live blocks after clean 0, bytes 0
+# show time: default 261 ms at best, show_wait_connection off 39 ms
+ok 273 - set_config(show_wait_connection, .F.) makes show return before the browser connected
+ok 274 - at the end every bridge-owned allocation is freed (counted by the bridge)
+1..274

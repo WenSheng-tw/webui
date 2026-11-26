@@ -1,0 +1,6 @@
+TAP version 13
+# mode 2 (hrb), suite headless, Harbour 3.2.0 (r2607071000)
+# hrb action: missing
+not ok 1 - hrb available (missing )
+1..1
+# FAILED 1 of 1

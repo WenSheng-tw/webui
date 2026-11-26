@@ -1,0 +1,14 @@
+ok - bridge.c (-std=c89 -pedantic-errors -Wall -Wextra -Werror)
+ok - bridge_core.c (-std=c89 -pedantic-errors -Wall -Wextra -Werror)
+ok - bridge_event.c (-std=c89 -pedantic-errors -Wall -Wextra -Werror)
+ok - bridge_win.c (-std=c89 -pedantic-errors -Wall -Wextra -Werror)
+ok - bridge_consts.h has no // comment
+ok - bridge_consts.h compiles on its own as C89
+ok - bridge_decl.h has no // comment
+ok - bridge_decl.h compiles on its own as C89
+ok - bridge_hb.h has no // comment
+ok - bridge_hb.h compiles on its own as C89
+ok - bridge_int.h has no // comment
+ok - bridge_int.h compiles on its own as C89
+ok - bridge_num.h has no // comment
+ok - bridge_num.h compiles on its own as C89
