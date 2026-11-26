@@ -90,6 +90,7 @@ void HB_FUN_WEBUI_BINDHB(void)
 {
     const char *pszJsName;
     const char *pszHandler;
+    char szName[BRIDGE_HANDLER_MAX];
     size_t nLen;
     size_t i;
 
@@ -102,7 +103,7 @@ void HB_FUN_WEBUI_BINDHB(void)
     }
 
     nLen = strlen(pszHandler);
-    if (nLen >= BRIDGE_HANDLER_MAX)
+    if (nLen == 0 || nLen >= BRIDGE_HANDLER_MAX)
     {
         hb_retni(0);
         return;
@@ -110,9 +111,16 @@ void HB_FUN_WEBUI_BINDHB(void)
 
     for (i = 0; i < nLen; i++)
     {
-        s_szHandler[i] = (char) toupper((unsigned char) pszHandler[i]);
+        szName[i] = (char) toupper((unsigned char) pszHandler[i]);
     }
-    s_szHandler[nLen] = '\0';
+    szName[nLen] = '\0';
+
+    if (hb_dynsymFind(szName) == NULL)
+    {
+        hb_retni(0);
+        return;
+    }
+    memcpy(s_szHandler, szName, nLen + 1);
 
     /*
      * WebUI runs every callback in a new thread by default, but the Harbour
