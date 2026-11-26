@@ -1015,12 +1015,12 @@ static void group_e(const char *dir)
     /* E2 */
     memset(buf, 'X', sizeof(buf));
     ok = webui_script(w, "return 40+2;", 5, buf, 64);
-    sprintf(g_msg, "E2 webui_script(\"return 40+2;\") returned %d, buffer \"%s\"", ok, buf);
+    sprintf(g_msg, "E2 webui_script(\"return 40+2;\") returned %d, buffer \"%.200s\"", ok, buf);
     tap(ok == 1 && strcmp(buf, "42") == 0, g_msg);
     memset(buf, 'X', 64);
     buf[63] = '\0';
     ok = webui_script(w, "throw new Error('abi');", 5, buf, 64);
-    sprintf(g_msg, "E2 throwing script returned %d, buffer was zeroed first and now holds the error text \"%s\"", ok, buf);
+    sprintf(g_msg, "E2 throwing script returned %d, buffer was zeroed first and now holds the error text \"%.200s\"", ok, buf);
     tap(ok == 0 && strstr(buf, "abi") != NULL && strchr(buf, 'X') == NULL, g_msg);
     memset(buf, 'X', 64);
     buf[63] = '\0';
@@ -1033,7 +1033,7 @@ static void group_e(const char *dir)
             ok, t1 - t0, b0, (int) buf[0]);
     tap(ok == 0 && b0 == 0 && buf[0] == '\0' && t1 - t0 < 1500UL, g_msg);
     ok = webui_script(w, "return 'abcdefghij';", 5, buf, 5);
-    sprintf(g_msg, "E2 result longer than the buffer is truncated to size-1: \"%s\"", buf);
+    sprintf(g_msg, "E2 result longer than the buffer is truncated to size-1: \"%.200s\"", buf);
     tap(ok == 1 && strcmp(buf, "abcd") == 0, g_msg);
 
     /* E1 + D3 live */
@@ -1041,7 +1041,7 @@ static void group_e(const char *dir)
     ok = wait_flag(w, "__done1", 20000);
     tap(ok, "E1 page finished the synchronous calls f and i");
     js_result(w, "__r1", buf, sizeof(buf));
-    sprintf(g_msg, "E1 JS received \"%s\"", buf);
+    sprintf(g_msg, "E1 JS received \"%.200s\"", buf);
     tap(strcmp(buf, "f-ok|i-ok") == 0, g_msg);
     abi_lock();
     sprintf(g_msg, "E1 callback saw %lu arguments (JS passed 4 after the name: 123, 'x', true, 1.5)", ul(G.f_count));
@@ -1105,7 +1105,7 @@ static void group_e(const char *dir)
 
     webui_set_config(BRIDGE_CFG_MULTI_CLIENT, 1);
     ok = webui_script(w, "return 1;", 5, buf, 16);
-    sprintf(g_msg, "C3 multi_client=1: webui_script returns %d (documented: false), buffer \"%s\"", ok, buf);
+    sprintf(g_msg, "C3 multi_client=1: webui_script returns %d (documented: false), buffer \"%.200s\"", ok, buf);
     tap(ok == 0, g_msg);
     webui_set_config(BRIDGE_CFG_MULTI_CLIENT, 0);
     ok = webui_script(w, "return 1;", 5, buf, 16);
@@ -1130,7 +1130,7 @@ static void group_e(const char *dir)
     ok = wait_flag(w, "__done3", 30000);
     tap(ok, "E3 page finished the asynchronous calls");
     js_result(w, "__r3", buf, sizeof(buf));
-    sprintf(g_msg, "E3 JS received %s", buf);
+    sprintf(g_msg, "E3 JS received %.200s", buf);
     diag(g_msg);
     sprintf(g_msg, "E3 late response delivered, event data valid until the response (get_string_at on the main thread matched: %d)", A.g_data_valid);
     tap(A.g_ok && A.g_data_valid && strstr(buf, "\"late\"") != NULL, g_msg);
