@@ -190,7 +190,80 @@ STATIC PROCEDURE HeadlessTests()
    T_Ok( WEBUI_CLEAN() == .T., "clean after rebuild cleans again" )
    T_Ok( WEBUI_BRIDGE_STAT( "live_bytes" ) == 0, "no bridge memory is left after the second clean" )
 
+   ExitOrderTests()
+
 RETURN
+
+/* QA finding F1: WebUI refuses new windows after webui_exit() until webui_clean(). The
+ * bridge records every WebUI use (also a lone exit), so clean always releases what it owns,
+ * and new_window between exit and clean raises instead of returning 0. */
+STATIC PROCEDURE ExitOrderTests()
+
+   LOCAL n1
+   LOCAL cMsg := ""
+   LOCAL oErr
+
+   T_Ok( WEBUI_BRIDGE_STAT( "dirty" ) == 0 .AND. WEBUI_BRIDGE_STAT( "exited" ) == 0, "F1 start state: nothing used since the last clean" )
+   T_Ok( WEBUI_CLEAN() == .F., "F1 clean as the first call is a no-op" )
+
+   /* order A: exit is the first call */
+   WEBUI_EXIT()
+   T_Ok( WEBUI_BRIDGE_STAT( "dirty" ) == 1 .AND. WEBUI_BRIDGE_STAT( "exited" ) == 1, "F1 a lone exit marks WebUI as used and exited" )
+   T_Raises( {|| WEBUI_NEW_WINDOW() }, "F1 new_window after exit and before clean raises" )
+   T_Raises( {|| WEBUI_NEWWINDOW() }, "F1 PoC-001 WEBUI_NEWWINDOW after exit and before clean raises" )
+   BEGIN SEQUENCE WITH {| e | Break( e ) }
+      WEBUI_NEW_WINDOW()
+   RECOVER USING oErr
+      IF HB_ISOBJECT( oErr )
+         cMsg := oErr:description
+      ENDIF
+   END SEQUENCE
+   T_Ok( "WEBUI_CLEAN" $ cMsg, "F1 the error text tells to call WEBUI_CLEAN: " + cMsg )
+   T_Pass( {|| WEBUI_EXIT() }, "F1 a second exit is harmless" )
+   T_Ok( WEBUI_CLEAN() == .T., "F1 clean after a lone exit releases WebUI and returns .T." )
+   T_Ok( WEBUI_BRIDGE_STAT( "dirty" ) == 0 .AND. WEBUI_BRIDGE_STAT( "exited" ) == 0 .AND. ;
+      WEBUI_BRIDGE_STAT( "live_bytes" ) == 0, "F1 clean after a lone exit resets the state and frees every bridge allocation" )
+   n1 := WEBUI_NEW_WINDOW()
+   T_Ok( HB_ISNUMERIC( n1 ) .AND. n1 >= 1, "F1 new_window works after exit then clean" )
+   T_Ok( WEBUI_BIND( n1, "w1_ready", "W1H_READY" ) >= 1, "F1 bind works after exit then clean" )
+   T_Ok( WEBUI_CLEAN() == .T. .AND. WEBUI_BRIDGE_STAT( "live_bytes" ) == 0, "F1 clean after the rebuild" )
+
+   /* order B: window first, then exit */
+   n1 := WEBUI_NEW_WINDOW()
+   T_Ok( n1 >= 1, "F1 reverse order: new_window works" )
+   WEBUI_EXIT()
+   T_Ok( WEBUI_BRIDGE_STAT( "exited" ) == 1, "F1 reverse order: exit is recorded" )
+   T_Raises( {|| WEBUI_NEW_WINDOW() }, "F1 reverse order: new_window after exit raises" )
+   T_Ok( WEBUI_CLEAN() == .T., "F1 reverse order: clean returns .T." )
+   n1 := WEBUI_NEW_WINDOW()
+   T_Ok( n1 >= 1, "F1 reverse order: new_window works after clean" )
+   T_Ok( WEBUI_CLEAN() == .T. .AND. WEBUI_BRIDGE_STAT( "live_bytes" ) == 0, "F1 reverse order: second clean frees everything" )
+
+   /* repeated exit and clean without any window */
+   T_Ok( ExitCleanLoop( 3 ), "F1 exit then clean three times in a row: every clean returns .T. and the allocations balance" )
+
+   /* other first calls also mark WebUI as used */
+   WEBUI_SET_TIMEOUT( 5 )
+   T_Ok( WEBUI_BRIDGE_STAT( "dirty" ) == 1 .AND. WEBUI_CLEAN() == .T., "F1 set_timeout as the first call: clean releases WebUI" )
+   WEBUI_WAIT_ASYNC()
+   T_Ok( WEBUI_BRIDGE_STAT( "dirty" ) == 1 .AND. WEBUI_CLEAN() == .T., "F1 wait_async as the first call: clean releases WebUI" )
+   WEBUI_CLOSE( 1 )
+   T_Ok( WEBUI_BRIDGE_STAT( "dirty" ) == 1 .AND. WEBUI_CLEAN() == .T., "F1 close as the first call: clean releases WebUI" )
+   T_Ok( WEBUI_BRIDGE_STAT( "live_bytes" ) == 0 .AND. WEBUI_BRIDGE_STAT( "allocs" ) == WEBUI_BRIDGE_STAT( "frees" ), "F1 no bridge memory is left" )
+
+RETURN
+
+STATIC FUNCTION ExitCleanLoop( nTimes )
+
+   LOCAL i
+   LOCAL lOk := .T.
+
+   FOR i := 1 TO nTimes
+      WEBUI_EXIT()
+      lOk := lOk .AND. WEBUI_CLEAN() == .T.
+   NEXT
+
+RETURN lOk .AND. WEBUI_BRIDGE_STAT( "live_bytes" ) == 0 .AND. WEBUI_BRIDGE_STAT( "allocs" ) == WEBUI_BRIDGE_STAT( "frees" )
 
 /* ------------------------------------------------------------------------------------ */
 /* handlers (called by the bridge dispatcher on the main thread)                         */
