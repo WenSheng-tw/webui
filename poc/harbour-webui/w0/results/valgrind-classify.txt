@@ -1,0 +1,2 @@
+CLASS bridge-webui definite_records=0 definite_direct_bytes=0 possible_records=0
+CLASS gtk-glib definite_records=2 definite_direct_bytes=2065 possible_records=0

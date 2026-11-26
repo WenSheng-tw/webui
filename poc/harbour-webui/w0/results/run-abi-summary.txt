@@ -1,18 +1,21 @@
 == static checks
-functions          rc=0   ok=18   (informational 0) not_ok=0   skip=0
+functions          rc=0   ok=19   (informational 0) not_ok=0   skip=0
 protos             rc=0   ok=14   (informational 0) not_ok=0   skip=0
 bool-objdump       rc=0   ok=23   (informational 23) not_ok=0   skip=0
 == variant O0
-O0-headless        rc=0   ok=57   (informational 13) not_ok=0   skip=0
-O0-live            rc=0   ok=32   (informational 0) not_ok=0   skip=0
+O0-headless        rc=0   ok=58   (informational 14) not_ok=0   skip=0
+O0-live            rc=0   ok=33   (informational 1) not_ok=0   skip=0
 == variant O2
-O2-headless        rc=0   ok=57   (informational 13) not_ok=0   skip=0
-O2-live            rc=0   ok=32   (informational 0) not_ok=0   skip=0
+O2-headless        rc=0   ok=58   (informational 14) not_ok=0   skip=0
+O2-live            rc=0   ok=33   (informational 1) not_ok=0   skip=0
 == variant asan
-asan-headless      rc=0   ok=57   (informational 13) not_ok=0   skip=0
-asan-live          rc=0   ok=32   (informational 0) not_ok=0   skip=0
+asan-headless      rc=0   ok=58   (informational 14) not_ok=0   skip=0
+asan-live          rc=0   ok=33   (informational 1) not_ok=0   skip=0
+== variant cnt
+cnt-headless       rc=0   ok=59   (informational 13) not_ok=0   skip=0
+cnt-live           rc=0   ok=34   (informational 0) not_ok=0   skip=0
 RESULT: all runs passed
 
-real	4m47.546s
-user	1m18.858s
-sys	1m40.866s
+real	6m5.946s
+user	1m42.298s
+sys	1m59.009s
