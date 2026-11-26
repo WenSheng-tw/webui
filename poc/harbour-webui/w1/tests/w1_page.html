@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PoC-002 W1 test page</title>
+<script src="webui.js"></script>
+</head>
+<body>
+<pre id="out">starting</pre>
+<script>
+function text(n) { return new Array(n + 1).join('x'); }
+
+async function connected() {
+    for (var i = 0; i < 1000 && !webui.isConnected(); i++) {
+        await new Promise(function (r) { setTimeout(r, 10); });
+    }
+    return webui.isConnected();
+}
+
+async function run() {
+    var R = {};
+    var out = document.getElementById('out');
+    try {
+        if (!(await connected())) {
+            throw new Error('never connected');
+        }
+        R.ready = await webui.call('w1_ready');
+        R.echo = await webui.call('w1_echo', 'h\u00e9llo \u4e16\u754c');
+        R.auto = await webui.call('w1_auto', 'x');
+        R.nil = await webui.call('w1_nil', 'x');
+        R.twice = await webui.call('w1_twice', 'x');
+        R.empty = await webui.call('w1_empty');
+        R.long = await webui.call('w1_long', text(20000));
+        R.hostile = await webui.call('w1_echo', 'q"\'\\\n\t<&>');
+        R.argchk = await webui.call('w1_argchk', 'x');
+        R.seq = [];
+        for (var i = 0; i < 20; i++) {
+            R.seq.push(await webui.call('w1_seq', String(i)));
+        }
+        var par = [];
+        for (var j = 0; j < 20; j++) {
+            par.push(webui.call('w1_par', String(j)));
+        }
+        R.par = await Promise.all(par);
+    } catch (e) {
+        R.error = String(e);
+    }
+    out.textContent = 'done ' + JSON.stringify(R);
+    await webui.call('w1_report', JSON.stringify(R));
+    try {
+        await webui.call('w1_done', 'bye');
+    } catch (e) {
+    }
+}
+window.addEventListener('load', run);
+</script>
+</body>
+</html>
