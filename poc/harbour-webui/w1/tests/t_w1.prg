@@ -22,6 +22,7 @@ STATIC s_aPar
 STATIC s_lReport
 STATIC s_aLive
 STATIC s_aShowMs
+STATIC s_nLive
 
 FUNCTION T_W1_RUN( cDir, cSuite )
 
@@ -339,9 +340,12 @@ STATIC PROCEDURE GuiTests()
 
    T_Diag( "gui suite" )
    s_cPage := hb_MemoRead( s_cDir + hb_ps() + "w1_page.html" )
-   T_Ok( Len( s_cPage ) > 100, "test page tests/w1_page.html is readable" )
-   s_aLive := {}
-   s_aShowMs := {}
+   IF ! T_Ok( Len( s_cPage ) > 100, "test page tests/w1_page.html is readable" )
+      RETURN
+   ENDIF
+   s_aLive := Array( 5, 3 )
+   s_aShowMs := Array( 5, 2 )
+   s_nLive := 0
 
    Cycle( "async", .T., .F. )
    Cycle( "wait", .F., .F. )
@@ -398,7 +402,8 @@ STATIC PROCEDURE Cycle( cEnd, lGeneric, lNoWait )
    nShowMs := hb_MilliSeconds() - nT0
    T_Diag( cTag + "show returned " + hb_ValToStr( lShown ) + " after " + hb_ntos( nShowMs ) + " ms, window " + hb_ntos( s_nWin ) )
    T_Ok( lShown == .T., cTag + "show returns .T. (browser started)" )
-   AAdd( s_aShowMs, { lNoWait, nShowMs } )
+   s_aShowMs[ s_nLive + 1 ][ 1 ] := lNoWait
+   s_aShowMs[ s_nLive + 1 ][ 2 ] := nShowMs
 
    IF lShown
       nT0 := hb_MilliSeconds()
@@ -447,7 +452,11 @@ STATIC PROCEDURE Cycle( cEnd, lGeneric, lNoWait )
    T_Ok( WEBUI_BRIDGE_STAT( "live_bytes" ) == 0 .AND. WEBUI_BRIDGE_STAT( "allocs" ) == WEBUI_BRIDGE_STAT( "frees" ), ;
       cTag + "clean: no bridge-owned memory is left" )
    T_Ok( WEBUI_CLEAN() == .F., cTag + "second clean is a no-op" )
-   AAdd( s_aLive, { cTag, W1T_COUNTER( "blocks" ), W1T_COUNTER( "bytes" ) } )
+   hb_gcAll()
+   s_nLive++
+   s_aLive[ s_nLive ][ 2 ] := W1T_COUNTER( "blocks" )
+   s_aLive[ s_nLive ][ 3 ] := W1T_COUNTER( "bytes" )
+   s_aLive[ s_nLive ][ 1 ] := s_nLive
 
 RETURN
 
@@ -518,30 +527,34 @@ STATIC PROCEDURE Finish()
    LOCAL nMin
    LOCAL nMax
 
-   IF s_aLive != NIL .AND. ! Empty( s_aLive )
+   IF s_nLive != NIL .AND. s_nLive > 0
       FOR EACH a IN s_aLive
-         T_Diag( a[ 1 ] + "live blocks after clean " + hb_ntos( a[ 2 ] ) + ", bytes " + hb_ntos( a[ 3 ] ) )
+         IF a[ 1 ] != NIL
+            T_Diag( "cycle " + hb_ntos( a[ 1 ] ) + ": live blocks after clean " + hb_ntos( a[ 2 ] ) + ", bytes " + hb_ntos( a[ 3 ] ) )
+         ENDIF
       NEXT
-      IF W1T_COUNTER( "enabled" ) == 1 .AND. Len( s_aLive ) >= 3
+      IF W1T_COUNTER( "enabled" ) == 1 .AND. s_nLive >= 3
          nMin := s_aLive[ 2 ][ 2 ]
          nMax := s_aLive[ 2 ][ 2 ]
          FOR EACH a IN s_aLive
-            IF a:__enumIndex() >= 2
+            IF a[ 1 ] != NIL .AND. a[ 1 ] >= 2
                nMin := Min( nMin, a[ 2 ] )
                nMax := Max( nMax, a[ 2 ] )
             ENDIF
          NEXT
-         T_Ok( nMax == nMin, "counters: live blocks after clean are identical for cycles 2 to " + hb_ntos( Len( s_aLive ) ) )
+         T_Ok( nMax == nMin, "counters: live blocks after clean are identical for cycles 2 to " + hb_ntos( s_nLive ) )
       ENDIF
    ENDIF
-   IF s_aShowMs != NIL .AND. Len( s_aShowMs ) >= 2
+   IF s_aShowMs != NIL .AND. s_nLive != NIL .AND. s_nLive >= 2
       nMin := 1000000
       nMax := 1000000
       FOR EACH a IN s_aShowMs
-         IF a[ 1 ]
-            nMax := a[ 2 ]
-         ELSE
-            nMin := Min( nMin, a[ 2 ] )
+         IF HB_ISLOGICAL( a[ 1 ] )
+            IF a[ 1 ]
+               nMax := a[ 2 ]
+            ELSE
+               nMin := Min( nMin, a[ 2 ] )
+            ENDIF
          ENDIF
       NEXT
       T_Diag( "show time: default " + hb_ntos( nMin ) + " ms at best, show_wait_connection off " + hb_ntos( nMax ) + " ms" )
