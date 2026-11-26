@@ -10,7 +10,12 @@
 /* WEBUI_NEW_WINDOW() -> nWindow (0 if WebUI could not create one). */
 void HB_FUN_WEBUI_NEW_WINDOW(void)
 {
-    bridge_ret_size(bridge_new_window());
+    size_t w;
+
+    if (bridge_new_window(&w))
+    {
+        bridge_ret_size(w);
+    }
 }
 
 /* WEBUI_SHOW( nWindow, cContent ) -> lShown. cContent is HTML text, a file name or a URL.
@@ -25,8 +30,8 @@ void HB_FUN_WEBUI_SHOW(void)
     {
         return;
     }
-    ok = webui_show(window, content);
     bridge_mark_dirty();
+    ok = webui_show(window, content);
     hb_retl(ok != 0);
 }
 
@@ -39,6 +44,7 @@ void HB_FUN_WEBUI_CLOSE(void)
     {
         return;
     }
+    bridge_mark_dirty();
     webui_close(window);
     hb_ret();
 }

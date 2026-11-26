@@ -17,7 +17,12 @@
 
 void HB_FUN_WEBUI_NEWWINDOW(void)
 {
-    bridge_ret_size(bridge_new_window());
+    size_t w;
+
+    if (bridge_new_window(&w))
+    {
+        bridge_ret_size(w);
+    }
 }
 
 void HB_FUN_WEBUI_BINDHB(void)

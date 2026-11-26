@@ -107,7 +107,8 @@ size_t bridge_event_stat(int which);
 /* ---- bridge_core.c: shared by bridge.c and HB_FUN_WEBUI_BIND ------------------------ */
 /* Returns the bind id, 0 on any failure (nothing raised). */
 size_t bridge_bind(size_t window, const char *element, const char *handler);
-size_t bridge_new_window(void);
+int bridge_new_window(size_t *window);
+void bridge_mark_exited(void);
 /* hb_retnd of an id or count; values above 2^53 cannot occur for ids and are returned as 0. */
 void bridge_ret_size(size_t v);
 

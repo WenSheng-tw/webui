@@ -125,6 +125,7 @@ char *bridge_strdup(const char *s)
 static int s_async = 0;
 static int s_dirty = 0;
 static int s_clean_pending = 0;
+static int s_exited = 0;
 static size_t s_cleans = 0;
 
 void bridge_mark_dirty(void)
@@ -139,6 +140,7 @@ int bridge_ensure_async(void)
     if (!s_async)
     {
         webui_set_config(BRIDGE_CFG_ASYNCHRONOUS_RESPONSE, 1);
+        bridge_mark_dirty();
         s_async = 1;
     }
     return 1;
@@ -155,17 +157,25 @@ void bridge_ret_size(size_t v)
     hb_retndlen(d, 0, 0);
 }
 
-size_t bridge_new_window(void)
+/* WebUI refuses new windows for the rest of the process once webui_exit() has run, until
+ * webui_clean() resets it. The bridge turns that silent 0 into an error. */
+int bridge_new_window(size_t *window)
 {
-    size_t w;
-
-    bridge_ensure_async();
-    w = webui_new_window();
-    if (w != 0)
+    if (s_exited)
     {
-        bridge_mark_dirty();
+        bridge_raise("WEBUI_NEW_WINDOW: the application was exited; call WEBUI_CLEAN() first");
+        return 0;
     }
-    return w;
+    bridge_ensure_async();
+    *window = webui_new_window();
+    bridge_mark_dirty();
+    return 1;
+}
+
+void bridge_mark_exited(void)
+{
+    bridge_mark_dirty();
+    s_exited = 1;
 }
 
 /* ---- handler table keyed by bind id ------------------------------------------------- */
@@ -437,8 +447,8 @@ void HB_FUN_WEBUI_SET_TIMEOUT(void)
     {
         return;
     }
-    webui_set_timeout(sec);
     bridge_mark_dirty();
+    webui_set_timeout(sec);
     hb_ret();
 }
 
@@ -459,8 +469,8 @@ void HB_FUN_WEBUI_SET_CONFIG(void)
         bridge_raise("option: asynchronous_response is managed by the bridge");
         return;
     }
-    webui_set_config((int) option, status);
     bridge_mark_dirty();
+    webui_set_config((int) option, status);
     hb_ret();
 }
 
@@ -473,6 +483,7 @@ void HB_FUN_WEBUI_WAIT(void)
         bridge_raise("WEBUI_WAIT must not be called from a bound handler");
         return;
     }
+    bridge_mark_dirty();
     for (;;)
     {
         bridge_pump();
@@ -491,6 +502,7 @@ void HB_FUN_WEBUI_WAIT_ASYNC(void)
 {
     int running;
 
+    bridge_mark_dirty();
     bridge_pump();
     running = webui_wait_async() ? 1 : 0;
     if (!running)
@@ -504,6 +516,7 @@ void HB_FUN_WEBUI_WAIT_ASYNC(void)
  * it first answers the open call with an empty string (see bridge_answer_all). */
 void HB_FUN_WEBUI_EXIT(void)
 {
+    bridge_mark_exited();
     bridge_answer_all();
     webui_exit();
     hb_ret();
@@ -516,6 +529,7 @@ void HB_FUN_WEBUI_CLEAN(void)
 {
     if (bridge_in_dispatch())
     {
+        bridge_mark_exited();
         bridge_answer_all();
         webui_exit();
         s_clean_pending = 1;
@@ -533,6 +547,7 @@ void HB_FUN_WEBUI_CLEAN(void)
     bridge_table_clear();
     s_async = 0;
     s_dirty = 0;
+    s_exited = 0;
     s_clean_pending = 0;
     s_cleans++;
     hb_retl(1);
@@ -585,6 +600,10 @@ void HB_FUN_WEBUI_BRIDGE_STAT(void)
     else if (strcmp(name, "dirty") == 0)
     {
         v = (size_t) s_dirty;
+    }
+    else if (strcmp(name, "exited") == 0)
+    {
+        v = (size_t) s_exited;
     }
     else
     {
