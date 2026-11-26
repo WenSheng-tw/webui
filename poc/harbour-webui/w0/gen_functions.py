@@ -115,6 +115,9 @@ def write_request(rows, dest, upto=None):
             if w == wave:
                 out.append("REQUEST %s" % hb_name(name))
         out.append("")
+    # A module that only holds REQUEST lines compiles to nothing ("Empty source file"), so
+    # the symbols would never reach the exe symbol table. A procedure makes it a real module.
+    out += ["PROCEDURE BridgeRequestAnchor()", "RETURN", ""]
     text = "\n".join(out)
     if dest == "-":
         sys.stdout.write(text)
