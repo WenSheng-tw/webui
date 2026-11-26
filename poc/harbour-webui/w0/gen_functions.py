@@ -128,9 +128,10 @@ def main():
         sel = [r[0] for r in rows if args.names == "ALL" or r[1] == args.names]
         sys.stdout.write("\n".join(sel) + "\n")
         return 0 if not tap.failed else 1
-    sys.stderr.write("TAP version 13\n1..%d\n%s\n" % (tap.n, "\n".join(tap.lines)))
+    report = sys.stderr if args.request == "-" else sys.stdout
+    report.write("TAP version 13\n1..%d\n%s\n" % (tap.n, "\n".join(tap.lines)))
     if tap.failed:
-        sys.stderr.write("# FAILED %d of %d checks\n" % (tap.failed, tap.n))
+        report.write("# FAILED %d of %d checks\n" % (tap.failed, tap.n))
         return 1
     if args.request:
         write_request(rows, args.request)
