@@ -149,201 +149,227 @@ ok 97 - new_window works after exit and clean (rebuild without show)
 ok 98 - bind works after clean
 ok 99 - clean after rebuild cleans again
 ok 100 - no bridge memory is left after the second clean
+ok 101 - F1 start state: nothing used since the last clean
+ok 102 - F1 clean as the first call is a no-op
+ok 103 - F1 a lone exit marks WebUI as used and exited
+# F1 new_window after exit and before clean raises: WEBUI_NEW_WINDOW: the application was exited; call WEBUI_CLEAN() first
+ok 104 - F1 new_window after exit and before clean raises
+# F1 PoC-001 WEBUI_NEWWINDOW after exit and before clean raises: WEBUI_NEW_WINDOW: the application was exited; call WEBUI_CLEAN() first
+ok 105 - F1 PoC-001 WEBUI_NEWWINDOW after exit and before clean raises
+ok 106 - F1 the error text tells to call WEBUI_CLEAN: WEBUI_NEW_WINDOW: the application was exited; call WEBUI_CLEAN() first
+ok 107 - F1 a second exit is harmless
+ok 108 - F1 clean after a lone exit releases WebUI and returns .T.
+ok 109 - F1 clean after a lone exit resets the state and frees every bridge allocation
+ok 110 - F1 new_window works after exit then clean
+ok 111 - F1 bind works after exit then clean
+ok 112 - F1 clean after the rebuild
+ok 113 - F1 reverse order: new_window works
+ok 114 - F1 reverse order: exit is recorded
+# F1 reverse order: new_window after exit raises: WEBUI_NEW_WINDOW: the application was exited; call WEBUI_CLEAN() first
+ok 115 - F1 reverse order: new_window after exit raises
+ok 116 - F1 reverse order: clean returns .T.
+ok 117 - F1 reverse order: new_window works after clean
+ok 118 - F1 reverse order: second clean frees everything
+ok 119 - F1 exit then clean three times in a row: every clean returns .T. and the allocations balance
+ok 120 - F1 set_timeout as the first call: clean releases WebUI
+ok 121 - F1 wait_async as the first call: clean releases WebUI
+ok 122 - F1 close as the first call: clean releases WebUI
+ok 123 - F1 no bridge memory is left
 # gui suite
-ok 101 - test page tests/w1_page.html is readable
-ok 102 - [async+generic] new_window
-ok 103 - [async+generic] bind: every handler bound
-ok 104 - [async+generic] bind: handler table holds exactly the binds of this window
-# [async+generic] show returned .T. after 272 ms, window 1
-ok 105 - [async+generic] show returns .T. (browser started)
-ok 106 - [async+generic] wait_async returns .F. after the window closed
-# [async+generic] run took 3856 ms
+ok 124 - test page tests/w1_page.html is readable
+ok 125 - [async+generic] new_window
+ok 126 - [async+generic] bind: every handler bound
+ok 127 - [async+generic] bind: handler table holds exactly the binds of this window
+# [async+generic] show returned .T. after 267 ms, window 1
+ok 128 - [async+generic] show returns .T. (browser started)
+ok 129 - [async+generic] wait_async returns .F. after the window closed
+# [async+generic] run took 3855 ms
 # [async+generic] bridge: dispatched 53, auto answers 1, missing handlers 0
-ok 107 - [async+generic] page ran to the end and reported
-ok 108 - [async+generic] page reported no JavaScript error
-ok 109 - [async+generic] bound call returns the handler's RETURN string
-ok 110 - [async+generic] handler parameters: window id, bind id, event number
-ok 111 - [async+generic] handler parameter: event type is CALLBACK
-ok 112 - [async+generic] get_string equals the handler's first parameter
-ok 113 - [async+generic] return_string delivers a UTF-8 answer unchanged
-ok 114 - [async+generic] return_string reports that the answer was accepted
-ok 115 - [async+generic] handler RETURN string is the answer when return_string is not called
-ok 116 - [async+generic] handler returning NIL answers with an empty string
-ok 117 - [async+generic] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
-ok 118 - [async+generic] call without argument: parameter and get_string are empty
-ok 119 - [async+generic] a 20000 character argument arrives complete
-ok 120 - [async+generic] quotes, backslash, newline, tab and markup characters survive both directions
-ok 121 - [async+generic] return_string rejects a number, a missing argument and a NUL byte inside a handler
-ok 122 - [async+generic] wait inside a handler raises instead of deadlocking
-ok 123 - [async+generic] pump inside a handler dispatches nothing (no re-entry)
-ok 124 - [async+generic] wait_async inside a handler does not re-enter or close the app
-ok 125 - [async+generic] handler that raised and recovered still answers
-ok 126 - [async+generic] 20 sequential calls all answered with their own result
-ok 127 - [async+generic] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
-ok 128 - [async+generic] 20 concurrent calls: every call reached the handler exactly once
-ok 129 - [async+generic] no call reached an unknown handler
-ok 130 - [async+generic] generic bind saw the CONNECTED event
+ok 130 - [async+generic] page ran to the end and reported
+ok 131 - [async+generic] page reported no JavaScript error
+ok 132 - [async+generic] bound call returns the handler's RETURN string
+ok 133 - [async+generic] handler parameters: window id, bind id, event number
+ok 134 - [async+generic] handler parameter: event type is CALLBACK
+ok 135 - [async+generic] get_string equals the handler's first parameter
+ok 136 - [async+generic] return_string delivers a UTF-8 answer unchanged
+ok 137 - [async+generic] return_string reports that the answer was accepted
+ok 138 - [async+generic] handler RETURN string is the answer when return_string is not called
+ok 139 - [async+generic] handler returning NIL answers with an empty string
+ok 140 - [async+generic] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 141 - [async+generic] call without argument: parameter and get_string are empty
+ok 142 - [async+generic] a 20000 character argument arrives complete
+ok 143 - [async+generic] quotes, backslash, newline, tab and markup characters survive both directions
+ok 144 - [async+generic] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 145 - [async+generic] wait inside a handler raises instead of deadlocking
+ok 146 - [async+generic] pump inside a handler dispatches nothing (no re-entry)
+ok 147 - [async+generic] wait_async inside a handler does not re-enter or close the app
+ok 148 - [async+generic] handler that raised and recovered still answers
+ok 149 - [async+generic] 20 sequential calls all answered with their own result
+ok 150 - [async+generic] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 151 - [async+generic] 20 concurrent calls: every call reached the handler exactly once
+ok 152 - [async+generic] no call reached an unknown handler
+ok 153 - [async+generic] generic bind saw the CONNECTED event
 # [async+generic] generic bind event types: [1,0]
-ok 131 - [async+generic] event queue is empty after the run
-ok 132 - [async+generic] clean (non-callback context, after wait) cleans
-ok 133 - [async+generic] clean: handler table freed, nothing pending
-ok 134 - [async+generic] clean: no bridge-owned memory is left
-ok 135 - [async+generic] second clean is a no-op
-ok 136 - [wait] new_window
-ok 137 - [wait] bind: every handler bound
-ok 138 - [wait] bind: handler table holds exactly the binds of this window
-# [wait] show returned .T. after 253 ms, window 1
-ok 139 - [wait] show returns .T. (browser started)
-ok 140 - [wait] wait returned
-# [wait] run took 3006 ms
+ok 154 - [async+generic] event queue is empty after the run
+ok 155 - [async+generic] clean (non-callback context, after wait) cleans
+ok 156 - [async+generic] clean: handler table freed, nothing pending
+ok 157 - [async+generic] clean: no bridge-owned memory is left
+ok 158 - [async+generic] second clean is a no-op
+ok 159 - [wait] new_window
+ok 160 - [wait] bind: every handler bound
+ok 161 - [wait] bind: handler table holds exactly the binds of this window
+# [wait] show returned .T. after 271 ms, window 1
+ok 162 - [wait] show returns .T. (browser started)
+ok 163 - [wait] wait returned
+# [wait] run took 3005 ms
 # [wait] bridge: dispatched 104, auto answers 2, missing handlers 0
-ok 141 - [wait] page ran to the end and reported
-ok 142 - [wait] page reported no JavaScript error
-ok 143 - [wait] bound call returns the handler's RETURN string
-ok 144 - [wait] handler parameters: window id, bind id, event number
-ok 145 - [wait] handler parameter: event type is CALLBACK
-ok 146 - [wait] get_string equals the handler's first parameter
-ok 147 - [wait] return_string delivers a UTF-8 answer unchanged
-ok 148 - [wait] return_string reports that the answer was accepted
-ok 149 - [wait] handler RETURN string is the answer when return_string is not called
-ok 150 - [wait] handler returning NIL answers with an empty string
-ok 151 - [wait] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
-ok 152 - [wait] call without argument: parameter and get_string are empty
-ok 153 - [wait] a 20000 character argument arrives complete
-ok 154 - [wait] quotes, backslash, newline, tab and markup characters survive both directions
-ok 155 - [wait] return_string rejects a number, a missing argument and a NUL byte inside a handler
-ok 156 - [wait] wait inside a handler raises instead of deadlocking
-ok 157 - [wait] pump inside a handler dispatches nothing (no re-entry)
-ok 158 - [wait] wait_async inside a handler does not re-enter or close the app
-ok 159 - [wait] handler that raised and recovered still answers
-ok 160 - [wait] 20 sequential calls all answered with their own result
-ok 161 - [wait] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
-ok 162 - [wait] 20 concurrent calls: every call reached the handler exactly once
-ok 163 - [wait] no call reached an unknown handler
-ok 164 - [wait] event queue is empty after the run
-ok 165 - [wait] clean (non-callback context, after wait) cleans
-ok 166 - [wait] clean: handler table freed, nothing pending
-ok 167 - [wait] clean: no bridge-owned memory is left
-ok 168 - [wait] second clean is a no-op
-ok 169 - [exit] new_window
-ok 170 - [exit] bind: every handler bound
-ok 171 - [exit] bind: handler table holds exactly the binds of this window
-# [exit] show returned .T. after 253 ms, window 1
-ok 172 - [exit] show returns .T. (browser started)
-ok 173 - [exit] wait returned
+ok 164 - [wait] page ran to the end and reported
+ok 165 - [wait] page reported no JavaScript error
+ok 166 - [wait] bound call returns the handler's RETURN string
+ok 167 - [wait] handler parameters: window id, bind id, event number
+ok 168 - [wait] handler parameter: event type is CALLBACK
+ok 169 - [wait] get_string equals the handler's first parameter
+ok 170 - [wait] return_string delivers a UTF-8 answer unchanged
+ok 171 - [wait] return_string reports that the answer was accepted
+ok 172 - [wait] handler RETURN string is the answer when return_string is not called
+ok 173 - [wait] handler returning NIL answers with an empty string
+ok 174 - [wait] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 175 - [wait] call without argument: parameter and get_string are empty
+ok 176 - [wait] a 20000 character argument arrives complete
+ok 177 - [wait] quotes, backslash, newline, tab and markup characters survive both directions
+ok 178 - [wait] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 179 - [wait] wait inside a handler raises instead of deadlocking
+ok 180 - [wait] pump inside a handler dispatches nothing (no re-entry)
+ok 181 - [wait] wait_async inside a handler does not re-enter or close the app
+ok 182 - [wait] handler that raised and recovered still answers
+ok 183 - [wait] 20 sequential calls all answered with their own result
+ok 184 - [wait] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 185 - [wait] 20 concurrent calls: every call reached the handler exactly once
+ok 186 - [wait] no call reached an unknown handler
+ok 187 - [wait] event queue is empty after the run
+ok 188 - [wait] clean (non-callback context, after wait) cleans
+ok 189 - [wait] clean: handler table freed, nothing pending
+ok 190 - [wait] clean: no bridge-owned memory is left
+ok 191 - [wait] second clean is a no-op
+ok 192 - [exit] new_window
+ok 193 - [exit] bind: every handler bound
+ok 194 - [exit] bind: handler table holds exactly the binds of this window
+# [exit] show returned .T. after 267 ms, window 1
+ok 195 - [exit] show returns .T. (browser started)
+ok 196 - [exit] wait returned
 # [exit] run took 1995 ms
 # [exit] bridge: dispatched 155, auto answers 4, missing handlers 0
-ok 174 - [exit] page ran to the end and reported
-ok 175 - [exit] page reported no JavaScript error
-ok 176 - [exit] bound call returns the handler's RETURN string
-ok 177 - [exit] handler parameters: window id, bind id, event number
-ok 178 - [exit] handler parameter: event type is CALLBACK
-ok 179 - [exit] get_string equals the handler's first parameter
-ok 180 - [exit] return_string delivers a UTF-8 answer unchanged
-ok 181 - [exit] return_string reports that the answer was accepted
-ok 182 - [exit] handler RETURN string is the answer when return_string is not called
-ok 183 - [exit] handler returning NIL answers with an empty string
-ok 184 - [exit] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
-ok 185 - [exit] call without argument: parameter and get_string are empty
-ok 186 - [exit] a 20000 character argument arrives complete
-ok 187 - [exit] quotes, backslash, newline, tab and markup characters survive both directions
-ok 188 - [exit] return_string rejects a number, a missing argument and a NUL byte inside a handler
-ok 189 - [exit] wait inside a handler raises instead of deadlocking
-ok 190 - [exit] pump inside a handler dispatches nothing (no re-entry)
-ok 191 - [exit] wait_async inside a handler does not re-enter or close the app
-ok 192 - [exit] handler that raised and recovered still answers
-ok 193 - [exit] 20 sequential calls all answered with their own result
-ok 194 - [exit] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
-ok 195 - [exit] 20 concurrent calls: every call reached the handler exactly once
-ok 196 - [exit] no call reached an unknown handler
-ok 197 - [exit] event queue is empty after the run
-ok 198 - [exit] clean (non-callback context, after wait) cleans
-ok 199 - [exit] clean: handler table freed, nothing pending
-ok 200 - [exit] clean: no bridge-owned memory is left
-ok 201 - [exit] second clean is a no-op
-ok 202 - [clean] new_window
-ok 203 - [clean] bind: every handler bound
-ok 204 - [clean] bind: handler table holds exactly the binds of this window
-# [clean] show returned .T. after 268 ms, window 1
-ok 205 - [clean] show returns .T. (browser started)
-ok 206 - [clean] wait returned
+ok 197 - [exit] page ran to the end and reported
+ok 198 - [exit] page reported no JavaScript error
+ok 199 - [exit] bound call returns the handler's RETURN string
+ok 200 - [exit] handler parameters: window id, bind id, event number
+ok 201 - [exit] handler parameter: event type is CALLBACK
+ok 202 - [exit] get_string equals the handler's first parameter
+ok 203 - [exit] return_string delivers a UTF-8 answer unchanged
+ok 204 - [exit] return_string reports that the answer was accepted
+ok 205 - [exit] handler RETURN string is the answer when return_string is not called
+ok 206 - [exit] handler returning NIL answers with an empty string
+ok 207 - [exit] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 208 - [exit] call without argument: parameter and get_string are empty
+ok 209 - [exit] a 20000 character argument arrives complete
+ok 210 - [exit] quotes, backslash, newline, tab and markup characters survive both directions
+ok 211 - [exit] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 212 - [exit] wait inside a handler raises instead of deadlocking
+ok 213 - [exit] pump inside a handler dispatches nothing (no re-entry)
+ok 214 - [exit] wait_async inside a handler does not re-enter or close the app
+ok 215 - [exit] handler that raised and recovered still answers
+ok 216 - [exit] 20 sequential calls all answered with their own result
+ok 217 - [exit] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 218 - [exit] 20 concurrent calls: every call reached the handler exactly once
+ok 219 - [exit] no call reached an unknown handler
+ok 220 - [exit] event queue is empty after the run
+ok 221 - [exit] clean (non-callback context, after wait) cleans
+ok 222 - [exit] clean: handler table freed, nothing pending
+ok 223 - [exit] clean: no bridge-owned memory is left
+ok 224 - [exit] second clean is a no-op
+ok 225 - [clean] new_window
+ok 226 - [clean] bind: every handler bound
+ok 227 - [clean] bind: handler table holds exactly the binds of this window
+# [clean] show returned .T. after 263 ms, window 1
+ok 228 - [clean] show returns .T. (browser started)
+ok 229 - [clean] wait returned
 # [clean] run took 1995 ms
 # [clean] bridge: dispatched 206, auto answers 6, missing handlers 0
-ok 207 - [clean] page ran to the end and reported
-ok 208 - [clean] page reported no JavaScript error
-ok 209 - [clean] bound call returns the handler's RETURN string
-ok 210 - [clean] handler parameters: window id, bind id, event number
-ok 211 - [clean] handler parameter: event type is CALLBACK
-ok 212 - [clean] get_string equals the handler's first parameter
-ok 213 - [clean] return_string delivers a UTF-8 answer unchanged
-ok 214 - [clean] return_string reports that the answer was accepted
-ok 215 - [clean] handler RETURN string is the answer when return_string is not called
-ok 216 - [clean] handler returning NIL answers with an empty string
-ok 217 - [clean] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
-ok 218 - [clean] call without argument: parameter and get_string are empty
-ok 219 - [clean] a 20000 character argument arrives complete
-ok 220 - [clean] quotes, backslash, newline, tab and markup characters survive both directions
-ok 221 - [clean] return_string rejects a number, a missing argument and a NUL byte inside a handler
-ok 222 - [clean] wait inside a handler raises instead of deadlocking
-ok 223 - [clean] pump inside a handler dispatches nothing (no re-entry)
-ok 224 - [clean] wait_async inside a handler does not re-enter or close the app
-ok 225 - [clean] handler that raised and recovered still answers
-ok 226 - [clean] 20 sequential calls all answered with their own result
-ok 227 - [clean] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
-ok 228 - [clean] 20 concurrent calls: every call reached the handler exactly once
-ok 229 - [clean] no call reached an unknown handler
-ok 230 - [clean] rule 5: clean inside a handler only exits (returns .F.)
-ok 231 - [clean] rule 5: clean inside a handler records that a clean is owed
-ok 232 - [clean] rule 5: handler table is intact inside the handler
-ok 233 - [clean] rule 5: handler table is still intact after wait returned
-ok 234 - [clean] rule 5: the owed clean is still pending after wait
-ok 235 - [clean] event queue is empty after the run
-ok 236 - [clean] clean (non-callback context, after wait) cleans
-ok 237 - [clean] clean: handler table freed, nothing pending
-ok 238 - [clean] clean: no bridge-owned memory is left
-ok 239 - [clean] second clean is a no-op
-ok 240 - [async+nowait] new_window
-ok 241 - [async+nowait] bind: every handler bound
-ok 242 - [async+nowait] bind: handler table holds exactly the binds of this window
+ok 230 - [clean] page ran to the end and reported
+ok 231 - [clean] page reported no JavaScript error
+ok 232 - [clean] bound call returns the handler's RETURN string
+ok 233 - [clean] handler parameters: window id, bind id, event number
+ok 234 - [clean] handler parameter: event type is CALLBACK
+ok 235 - [clean] get_string equals the handler's first parameter
+ok 236 - [clean] return_string delivers a UTF-8 answer unchanged
+ok 237 - [clean] return_string reports that the answer was accepted
+ok 238 - [clean] handler RETURN string is the answer when return_string is not called
+ok 239 - [clean] handler returning NIL answers with an empty string
+ok 240 - [clean] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 241 - [clean] call without argument: parameter and get_string are empty
+ok 242 - [clean] a 20000 character argument arrives complete
+ok 243 - [clean] quotes, backslash, newline, tab and markup characters survive both directions
+ok 244 - [clean] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 245 - [clean] wait inside a handler raises instead of deadlocking
+ok 246 - [clean] pump inside a handler dispatches nothing (no re-entry)
+ok 247 - [clean] wait_async inside a handler does not re-enter or close the app
+ok 248 - [clean] handler that raised and recovered still answers
+ok 249 - [clean] 20 sequential calls all answered with their own result
+ok 250 - [clean] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 251 - [clean] 20 concurrent calls: every call reached the handler exactly once
+ok 252 - [clean] no call reached an unknown handler
+ok 253 - [clean] rule 5: clean inside a handler only exits (returns .F.)
+ok 254 - [clean] rule 5: clean inside a handler records that a clean is owed
+ok 255 - [clean] rule 5: handler table is intact inside the handler
+ok 256 - [clean] rule 5: handler table is still intact after wait returned
+ok 257 - [clean] rule 5: the owed clean is still pending after wait
+ok 258 - [clean] event queue is empty after the run
+ok 259 - [clean] clean (non-callback context, after wait) cleans
+ok 260 - [clean] clean: handler table freed, nothing pending
+ok 261 - [clean] clean: no bridge-owned memory is left
+ok 262 - [clean] second clean is a no-op
+ok 263 - [async+nowait] new_window
+ok 264 - [async+nowait] bind: every handler bound
+ok 265 - [async+nowait] bind: handler table holds exactly the binds of this window
 # [async+nowait] show returned .T. after 41 ms, window 1
-ok 243 - [async+nowait] show returns .T. (browser started)
-ok 244 - [async+nowait] wait_async returns .F. after the window closed
-# [async+nowait] run took 4058 ms
+ok 266 - [async+nowait] show returns .T. (browser started)
+ok 267 - [async+nowait] wait_async returns .F. after the window closed
+# [async+nowait] run took 4079 ms
 # [async+nowait] bridge: dispatched 257, auto answers 7, missing handlers 0
-ok 245 - [async+nowait] page ran to the end and reported
-ok 246 - [async+nowait] page reported no JavaScript error
-ok 247 - [async+nowait] bound call returns the handler's RETURN string
-ok 248 - [async+nowait] handler parameters: window id, bind id, event number
-ok 249 - [async+nowait] handler parameter: event type is CALLBACK
-ok 250 - [async+nowait] get_string equals the handler's first parameter
-ok 251 - [async+nowait] return_string delivers a UTF-8 answer unchanged
-ok 252 - [async+nowait] return_string reports that the answer was accepted
-ok 253 - [async+nowait] handler RETURN string is the answer when return_string is not called
-ok 254 - [async+nowait] handler returning NIL answers with an empty string
-ok 255 - [async+nowait] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
-ok 256 - [async+nowait] call without argument: parameter and get_string are empty
-ok 257 - [async+nowait] a 20000 character argument arrives complete
-ok 258 - [async+nowait] quotes, backslash, newline, tab and markup characters survive both directions
-ok 259 - [async+nowait] return_string rejects a number, a missing argument and a NUL byte inside a handler
-ok 260 - [async+nowait] wait inside a handler raises instead of deadlocking
-ok 261 - [async+nowait] pump inside a handler dispatches nothing (no re-entry)
-ok 262 - [async+nowait] wait_async inside a handler does not re-enter or close the app
-ok 263 - [async+nowait] handler that raised and recovered still answers
-ok 264 - [async+nowait] 20 sequential calls all answered with their own result
-ok 265 - [async+nowait] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
-ok 266 - [async+nowait] 20 concurrent calls: every call reached the handler exactly once
-ok 267 - [async+nowait] no call reached an unknown handler
-ok 268 - [async+nowait] event queue is empty after the run
-ok 269 - [async+nowait] clean (non-callback context, after wait) cleans
-ok 270 - [async+nowait] clean: handler table freed, nothing pending
-ok 271 - [async+nowait] clean: no bridge-owned memory is left
-ok 272 - [async+nowait] second clean is a no-op
+ok 268 - [async+nowait] page ran to the end and reported
+ok 269 - [async+nowait] page reported no JavaScript error
+ok 270 - [async+nowait] bound call returns the handler's RETURN string
+ok 271 - [async+nowait] handler parameters: window id, bind id, event number
+ok 272 - [async+nowait] handler parameter: event type is CALLBACK
+ok 273 - [async+nowait] get_string equals the handler's first parameter
+ok 274 - [async+nowait] return_string delivers a UTF-8 answer unchanged
+ok 275 - [async+nowait] return_string reports that the answer was accepted
+ok 276 - [async+nowait] handler RETURN string is the answer when return_string is not called
+ok 277 - [async+nowait] handler returning NIL answers with an empty string
+ok 278 - [async+nowait] return_string twice: the first answer wins, the second reports .F., the RETURN value is ignored
+ok 279 - [async+nowait] call without argument: parameter and get_string are empty
+ok 280 - [async+nowait] a 20000 character argument arrives complete
+ok 281 - [async+nowait] quotes, backslash, newline, tab and markup characters survive both directions
+ok 282 - [async+nowait] return_string rejects a number, a missing argument and a NUL byte inside a handler
+ok 283 - [async+nowait] wait inside a handler raises instead of deadlocking
+ok 284 - [async+nowait] pump inside a handler dispatches nothing (no re-entry)
+ok 285 - [async+nowait] wait_async inside a handler does not re-enter or close the app
+ok 286 - [async+nowait] handler that raised and recovered still answers
+ok 287 - [async+nowait] 20 sequential calls all answered with their own result
+ok 288 - [async+nowait] 20 concurrent calls: every caller gets its own answer (rule 3 queue)
+ok 289 - [async+nowait] 20 concurrent calls: every call reached the handler exactly once
+ok 290 - [async+nowait] no call reached an unknown handler
+ok 291 - [async+nowait] event queue is empty after the run
+ok 292 - [async+nowait] clean (non-callback context, after wait) cleans
+ok 293 - [async+nowait] clean: handler table freed, nothing pending
+ok 294 - [async+nowait] clean: no bridge-owned memory is left
+ok 295 - [async+nowait] second clean is a no-op
 # cycle 1: live blocks after clean 0, bytes 0
 # cycle 2: live blocks after clean 0, bytes 0
 # cycle 3: live blocks after clean 0, bytes 0
 # cycle 4: live blocks after clean 0, bytes 0
 # cycle 5: live blocks after clean 0, bytes 0
-# show time: default 253 ms at best, show_wait_connection off 41 ms
-ok 273 - set_config(show_wait_connection, .F.) makes show return before the browser connected
-ok 274 - at the end every bridge-owned allocation is freed (counted by the bridge)
-1..274
+# show time: default 263 ms at best, show_wait_connection off 41 ms
+ok 296 - set_config(show_wait_connection, .F.) makes show return before the browser connected
+ok 297 - at the end every bridge-owned allocation is freed (counted by the bridge)
+1..297

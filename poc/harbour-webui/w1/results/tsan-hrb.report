@@ -1,0 +1,22 @@
+==================
+WARNING: ThreadSanitizer: data race (pid=772303)
+  Write of size 8 at 0x72a000030188 by thread T13:
+    #0 free ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:724 (libtsan.so.2+0x57c71) (BuildId: 2a13a7710e361d06f7babbea53065ca2be93f738)
+    #1 worker_thread <null> (w1run-hrb+0xde18c) (BuildId: 64221cf83e3f4b555a73f20816abebe0dff39313)
+
+  Previous read of size 3 at 0x72a00003018d by thread T67:
+    #0 strlen ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:388 (libtsan.so.2+0x5c0c0) (BuildId: 2a13a7710e361d06f7babbea53065ca2be93f738)
+    #1 strlen ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:380 (libtsan.so.2+0x5c0c0)
+    #2 mg_strcasestr <null> (w1run-hrb+0xd4639) (BuildId: 64221cf83e3f4b555a73f20816abebe0dff39313)
+
+  Thread T13 'civetweb-worker' (tid=772436, running) created by thread T10 at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:1022 (libtsan.so.2+0x5ac1a) (BuildId: 2a13a7710e361d06f7babbea53065ca2be93f738)
+    #1 mg_start_thread_with_id <null> (w1run-hrb+0xcfc76) (BuildId: 64221cf83e3f4b555a73f20816abebe0dff39313)
+
+  Thread T67 (tid=772491, finished) created by thread T13 at:
+    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:1022 (libtsan.so.2+0x5ac1a) (BuildId: 2a13a7710e361d06f7babbea53065ca2be93f738)
+    #1 _webui_receive <null> (w1run-hrb+0xc7df4) (BuildId: 64221cf83e3f4b555a73f20816abebe0dff39313)
+
+SUMMARY: ThreadSanitizer: data race (/workspace/poc/harbour-webui/w1/build/tsan/w1run-hrb+0xde18c) (BuildId: 64221cf83e3f4b555a73f20816abebe0dff39313) in worker_thread
+==================
+ThreadSanitizer: reported 1 warnings

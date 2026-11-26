@@ -16,8 +16,8 @@ ok 13 - A13 self: wrong hash and version in sidecar recompiles
 ok 14 - A13 self: right hash but other Harbour version recompiles
 ok 15 - A13 self: missing sidecar recompiles
 ok 16 - A13 self: sidecar written again, next call reuses
-/tmp/w1st_22916674/st.prg(1) Error E0020  Incomplete statement or unbalanced delimiters
-/tmp/w1st_22916674/st.prg(2) Warning W0005  RETURN statement with no return value in function
+/tmp/w1st_16667445/st.prg(1) Error E0020  Incomplete statement or unbalanced delimiters
+/tmp/w1st_16667445/st.prg(2) Warning W0005  RETURN statement with no return value in function
 1 error
 
 No code generated.

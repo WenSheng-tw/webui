@@ -1,6 +1,6 @@
 #!/bin/sh
 # PoC-002 W1: build the two test executables (spec section 8: dual-mode runner).
-#   ./build.sh [variant]      variant: O2 (default), O0, asan, cnt, vg
+#   ./build.sh [variant]      variant: O2 (default), O0, asan, cnt, vg, tsan
 # Output: build/<variant>/w1run-linked  (mode 1, tests linked in)
 #         build/<variant>/w1run-hrb     (mode 2, tests loaded from tests/t_w1.hrb)
 # The bridge sources are compiled here with strict C89 flags, then handed to hbmk2 as
@@ -20,6 +20,7 @@ case $V in
     O2)   OPT="-O2 -g" ;;
     asan) OPT="-O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined -fno-sanitize-recover=all" ;;
     cnt)  OPT="-O2 -g" ;;
+    tsan) OPT="-O1 -g -fno-omit-frame-pointer -fsanitize=thread" ;;
     vg)   OPT="-O0 -g" ;;
     *) echo "unknown variant $V"; exit 2 ;;
 esac
@@ -42,6 +43,9 @@ else
 fi
 if [ "$V" = asan ]; then
     HB_LDFLAGS="-ldflag=-fsanitize=address,undefined"
+fi
+if [ "$V" = tsan ]; then
+    HB_LDFLAGS="-ldflag=-fsanitize=thread"
 fi
 
 OBJS="$OUT/obj/bridge_core.o $OUT/obj/bridge_win.o $OUT/obj/bridge_event.o $OUT/obj/bridge.o $OUT/obj/test_aid.o $EXTRA_OBJ"

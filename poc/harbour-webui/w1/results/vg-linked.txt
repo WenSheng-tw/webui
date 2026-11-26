@@ -1,7 +1,7 @@
 == valgrind valgrind-3.22.0, target /workspace/poc/harbour-webui/w1/build/vg/w1run-linked --dir=/workspace/poc/harbour-webui/w1/tests
 == pass 1: raw, no suppressions
-test exit code: 0  (274 ok, 0 not ok)
-    total heap usage: 16,729 allocs, 16,446 frees, 58,703,133 bytes allocated
+test exit code: 0  (297 ok, 0 not ok)
+    total heap usage: 17,069 allocs, 16,786 frees, 66,792,898 bytes allocated
   1 bytes in 1 blocks are definitely lost in loss record 1 of 249
   2,064 bytes in 1 blocks are indirectly lost in loss record 241 of 249
   2,064 bytes in 1 blocks are indirectly lost in loss record 242 of 249
@@ -17,14 +17,14 @@ test exit code: 0  (274 ok, 0 not ok)
 CLASS bridge-webui definite_records=0 definite_direct_bytes=0 possible_records=0
 CLASS gtk-glib definite_records=2 definite_direct_bytes=2065 possible_records=0
 == pass 2: with valgrind-dlopen.supp, definite leaks are errors
-valgrind exit code: 0  (274 ok, 0 not ok)
-    total heap usage: 16,729 allocs, 16,446 frees, 58,703,133 bytes allocated
+valgrind exit code: 0  (297 ok, 0 not ok)
+    total heap usage: 17,070 allocs, 16,787 frees, 66,792,911 bytes allocated
      definitely lost: 0 bytes in 0 blocks
      indirectly lost: 0 bytes in 0 blocks
        possibly lost: 0 bytes in 0 blocks
      still reachable: 8,265 bytes in 20 blocks
           suppressed: 48,153 bytes in 242 blocks
   ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 2 from 2)
---738317-- used_suppression:    235 dlopen-gtk-glib-constructor-reachable /workspace/poc/harbour-webui/w0/valgrind-dlopen.supp:23 suppressed: 35,768 bytes in 235 blocks
---738317-- used_suppression:      7 dlopen-gtk-glib-constructor-definite /workspace/poc/harbour-webui/w0/valgrind-dlopen.supp:12 suppressed: 22,705 bytes in 7 blocks
+--768012-- used_suppression:    235 dlopen-gtk-glib-constructor-reachable /workspace/poc/harbour-webui/w0/valgrind-dlopen.supp:23 suppressed: 35,768 bytes in 235 blocks
+--768012-- used_suppression:      7 dlopen-gtk-glib-constructor-definite /workspace/poc/harbour-webui/w0/valgrind-dlopen.supp:12 suppressed: 22,705 bytes in 7 blocks
   ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 2 from 2)
