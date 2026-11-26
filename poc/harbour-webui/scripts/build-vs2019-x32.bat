@@ -139,7 +139,7 @@ rem ---- 5. Build with hbmk2 (same command line as README.md) ------------
 if exist "%ROOT%\hbwebui.exe" del "%ROOT%\hbwebui.exe"
 echo.
 echo Running hbmk2 ...
-"%HBMK2%" prg\main.prg prg\hello.prg src\bridge.c -I..\webui\include -L..\webui\dist -lwebui-2-static -lws2_32 -lole32 -luser32 -ladvapi32 -lshell32 -ohbwebui.exe
+"%HBMK2%" -st prg\main.prg prg\hello.prg src\bridge.c -I..\webui\include -L..\webui\dist -lwebui-2-static -lws2_32 -lole32 -luser32 -ladvapi32 -lshell32 -ohbwebui.exe
 set "HBMK2_RC=%ERRORLEVEL%"
 if not "%HBMK2_RC%"=="0" goto err_hbmk2
 if not exist "%ROOT%\hbwebui.exe" goto err_noexe

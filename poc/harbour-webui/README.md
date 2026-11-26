@@ -107,7 +107,7 @@ cd /d d:\hbdev32\harbour-webui
 scripts\build-vs2019-x32.bat
 ```
 
-- 腳本會依序：設定 ENVIRONMENT.md 所列的 `HB_*` 變數與 `chcp 65001`、檢查 `hbmk2.exe` 與四個來源檔（`prg\main.prg`、`prg\hello.prg`、`src\bridge.c`、`ui\index.html`）、檢查 WebUI 靜態函式庫、呼叫一次 `vcvarsall.bat x86`、執行 hbmk2。成功時印出 `hbwebui.exe` 的完整路徑；失敗時結束碼為 1。
+- 腳本會依序：設定 ENVIRONMENT.md 所列的 `HB_*` 變數與 `chcp 65001`、檢查 `hbmk2.exe` 與四個來源檔（`prg\main.prg`、`prg\hello.prg`、`src\bridge.c`、`ui\index.html`）、檢查 WebUI 靜態函式庫、呼叫一次 `vcvarsall.bat x86`、執行 hbmk2（加 `-st`，固定 Harbour VM 為單執行緒）。成功時印出 `hbwebui.exe` 的完整路徑；失敗時結束碼為 1。
 - 假設值（無法由雲端確認，若不符請改腳本頂端的設定）：`vcvarsall.bat` 位於 `C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat`（可先設定環境變數 `VCVARSALL` 覆蓋）；OpenSSL、curl、ADS 路徑以 `d:\hbdev32\` 為根，依 ENVIRONMENT.md 的相對路徑組成。
 - 記錄檔：`scripts\build-vs2019-x32.log`，同一份輸出也會在結束後顯示在主控台（不是即時輸出，hbmk2 執行期間主控台不會有畫面）。
 - 失敗時：
@@ -125,7 +125,7 @@ nmake
 
 rem 2. 建置 PoC
 cd d:\hbdev32\harbour-webui
-d:\hbdev32\harbour-core\bin\win\msvc\hbmk2.exe prg\main.prg prg\hello.prg src\bridge.c ^
+d:\hbdev32\harbour-core\bin\win\msvc\hbmk2.exe -st prg\main.prg prg\hello.prg src\bridge.c ^
   -I..\webui\include -L..\webui\dist -lwebui-2-static ^
   -lws2_32 -lole32 -luser32 -ladvapi32 -lshell32 ^
   -ohbwebui.exe
