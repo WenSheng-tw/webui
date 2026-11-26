@@ -17,7 +17,8 @@ rem missing BCC environment (HB_COMPILER) stops the script, with exit 1.
 rem
 rem   1 identify tools        2 implib + tlib symbol list
 rem   3 dumpbin (if on PATH)  4 link probe via hbmk2 (no window is shown)
-rem   5 build and run PoC with the DLL (you click, then close the window)
+rem   5 build and run PoC with the DLL as hbwebui_bcc.exe (you click, then
+rem     close the window); the MSVC hbwebui.exe is never touched
 rem   6 hbmk2 -trace -info for the PoC build (VM mode, link line)
 rem
 rem Earlier logs are never deleted. Only the same step file is overwritten.
@@ -54,6 +55,8 @@ echo PoC root: %ROOT%
 echo WebUI   : %WEBUI%
 echo Logs    : %LOGDIR%
 if defined VSCMD_VER echo [WARN] A Visual Studio environment is active in this window. Use a clean window for BCC.
+if defined HBMK2 echo HBMK2   : %HBMK2%
+if not defined HBMK2 echo HBMK2   : NOT FOUND
 if not defined HBMK2 echo [WARN] hbmk2.exe not found: steps 4, 5 and 6 will fail.
 echo.
 
@@ -91,6 +94,7 @@ echo.
 if exist "%SUMFILE%" del "%SUMFILE%"
 call :say "BCC probe summary   %DATE% %TIME%"
 call :say "STATUS: UNVERIFIED on Windows (script was written without running it)."
+call :say "HBMK2 used: %HBMK2%"
 call :say "----------------------------------------------------------------------"
 call :say "Step  rc    Name                        Note"
 call :say "----------------------------------------------------------------------"
@@ -137,6 +141,16 @@ rem ----------------------------------------------------------------------
 :say
 echo.%~1
 >>"%SUMFILE%" echo.%~1
+exit /b 0
+
+:showfile
+set "FSZ=0"
+if exist "%~1" for %%F in ("%~1") do set "FSZ=%%~zF"
+if "%FSZ%"=="0" goto showfile_empty
+type "%~1"
+exit /b 0
+:showfile_empty
+echo (empty or missing: %~1)
 exit /b 0
 
 :where1
@@ -202,6 +216,9 @@ rem records what it finds; BCC may need _webui_new_window (leading underscore).
 rem ----------------------------------------------------------------------
 :step2
 echo STEP 2: import library from webui-2.dll
+echo Removing stale outputs of this step first.
+for %%F in (webui-2.lib webui-2.lst webui-2-us.lib webui-2-us.lst) do if exist "%WEBUI%\dist\bcc\%%F" del "%WEBUI%\dist\bcc\%%F"
+for %%F in (step-2-symbols.txt step-2-symbols-us.txt) do if exist "%LOGDIR%\%%F" del "%LOGDIR%\%%F"
 if exist "%WEBUI%\dist\webui-2.dll" goto step2_havedll
 echo [ERROR] DLL not found: %WEBUI%\dist\webui-2.dll
 echo         Build it first with nmake in d:\hbdev32\webui (vs2019-x32 environment).
@@ -234,7 +251,7 @@ goto step2_us
 :step2_haslst
 findstr /i /l /c:"webui_new_window" /c:"webui_bind" /c:"webui_show" /c:"webui_wait" /c:"webui_get_string" /c:"webui_return_string" /c:"webui_set_config" "dist\bcc\webui-2.lst" > "%LOGDIR%\step-2-symbols.txt" 2>&1
 set "R2C=%ERRORLEVEL%"
-type "%LOGDIR%\step-2-symbols.txt"
+call :showfile "%LOGDIR%\step-2-symbols.txt"
 echo findstr rc=%R2C%  (0 = matches found, 1 = none)
 
 :step2_us
@@ -249,7 +266,7 @@ echo tlib rc=%ERRORLEVEL%
 if not exist "dist\bcc\webui-2-us.lst" goto step2_done
 echo --- symbols found in dist\bcc\webui-2-us.lst (saved to step-2-symbols-us.txt)
 findstr /i /l /c:"webui_new_window" /c:"webui_bind" /c:"webui_show" /c:"webui_wait" /c:"webui_get_string" /c:"webui_return_string" /c:"webui_set_config" "dist\bcc\webui-2-us.lst" > "%LOGDIR%\step-2-symbols-us.txt" 2>&1
-type "%LOGDIR%\step-2-symbols-us.txt"
+call :showfile "%LOGDIR%\step-2-symbols-us.txt"
 
 :step2_done
 popd
@@ -267,14 +284,26 @@ rem ----------------------------------------------------------------------
 rem Step 3: dumpbin (decisive when available; it ships with MSVC, not BCC)
 rem ----------------------------------------------------------------------
 :step3
-echo STEP 3: dumpbin on webui-2.dll
+echo STEP 3: dumpbin (or tdump) on webui-2.dll
+echo NOTE: the export names still need to be confirmed from the vs2019 window with
+echo       dumpbin /exports %WEBUI%\dist\webui-2.dll
+echo       Output from BCC tools below is only a hint.
+echo.
 where dumpbin >nul 2>&1
-if errorlevel 1 goto step3_skip
-if exist "%WEBUI%\dist\webui-2.dll" goto step3_run
+if not errorlevel 1 goto step3_dumpbin
+where tdump >nul 2>&1
+if not errorlevel 1 goto step3_tdump
+echo SKIPPED: neither dumpbin nor tdump is on PATH.
+echo dumpbin ships with Visual Studio, tdump with BCC. No call to vcvarsall is made.
+set "NOTE3=SKIPPED, no dumpbin or tdump on PATH"
+exit /b 0
+
+:step3_dumpbin
+if exist "%WEBUI%\dist\webui-2.dll" goto step3_dumpbin_run
 echo [ERROR] DLL not found: %WEBUI%\dist\webui-2.dll
 set "NOTE3=webui-2.dll missing"
 exit /b 1
-:step3_run
+:step3_dumpbin_run
 echo --- dumpbin /exports
 dumpbin /exports "%WEBUI%\dist\webui-2.dll"
 set "R3A=%ERRORLEVEL%"
@@ -287,11 +316,19 @@ echo dumpbin /dependents rc=%R3B%
 set "NOTE3=exports=%R3A% dependents=%R3B%"
 if not "%R3A%"=="0" exit /b %R3A%
 exit /b %R3B%
-:step3_skip
-echo SKIPPED: dumpbin is not on PATH (it ships with Visual Studio, not BCC).
-echo This is not an error. No call to vcvarsall is made by this script.
-set "NOTE3=SKIPPED, dumpbin not on PATH"
-exit /b 0
+
+:step3_tdump
+if exist "%WEBUI%\dist\webui-2.dll" goto step3_tdump_run
+echo [ERROR] DLL not found: %WEBUI%\dist\webui-2.dll
+set "NOTE3=webui-2.dll missing"
+exit /b 1
+:step3_tdump_run
+echo dumpbin not found, fallback: tdump -ee
+tdump -ee "%WEBUI%\dist\webui-2.dll"
+set "R3A=%ERRORLEVEL%"
+echo tdump -ee rc=%R3A%
+set "NOTE3=dumpbin missing, tdump -ee rc=%R3A%, confirm with dumpbin"
+exit /b %R3A%
 
 
 rem ----------------------------------------------------------------------
@@ -303,6 +340,9 @@ rem own main. Attempt A uses webui-2.lib, attempt B uses webui-2-us.lib.
 rem ----------------------------------------------------------------------
 :step4
 echo STEP 4: link probe, compile and link only (no window is shown, not run)
+echo Removing stale outputs of this step first.
+for %%F in (step-4-A.txt step-4-B.txt step-4-unresolved.txt link_probe_A.exe link_probe_B.exe link_probe.obj) do if exist "%LOGDIR%\%%F" del "%LOGDIR%\%%F"
+for %%F in (link_probe_A link_probe_B) do for %%X in (tds map ilc ild ilf ils) do if exist "%LOGDIR%\%%F.%%X" del "%LOGDIR%\%%F.%%X"
 set "R4C=-" & set "R4A=-" & set "R4B=-"
 
 echo.
@@ -333,10 +373,10 @@ echo hbmk2 attempt B rc=%R4B%
 :step4_unres
 echo.
 echo --- unresolved externals (saved to step-4-unresolved.txt)
-if exist "%LOGDIR%\step-4-A.txt" findstr /i /c:"unresolved" /c:"undefined" "%LOGDIR%\step-4-A.txt" > "%LOGDIR%\step-4-unresolved.txt" 2>&1
+type nul > "%LOGDIR%\step-4-unresolved.txt"
+if exist "%LOGDIR%\step-4-A.txt" findstr /i /c:"unresolved" /c:"undefined" "%LOGDIR%\step-4-A.txt" >> "%LOGDIR%\step-4-unresolved.txt" 2>&1
 if exist "%LOGDIR%\step-4-B.txt" findstr /i /c:"unresolved" /c:"undefined" "%LOGDIR%\step-4-B.txt" >> "%LOGDIR%\step-4-unresolved.txt" 2>&1
-if exist "%LOGDIR%\step-4-unresolved.txt" type "%LOGDIR%\step-4-unresolved.txt"
-if not exist "%LOGDIR%\step-4-unresolved.txt" echo (no output)
+call :showfile "%LOGDIR%\step-4-unresolved.txt"
 
 set "NOTE4=compile=%R4C% A=%R4A% B=%R4B%"
 if "%R4A%"=="0" exit /b 0
@@ -354,6 +394,7 @@ rem ----------------------------------------------------------------------
 rem Step 5: build the PoC against the DLL import library, run it (decisive)
 rem Not redirected as a whole, because pause needs the console. Output goes
 rem to step-5.log and run.log. You click in the window, then close it.
+rem The output is hbwebui_bcc.exe so the MSVC hbwebui.exe is never overwritten.
 rem ----------------------------------------------------------------------
 :step5
 set "S5=%LOGDIR%\step-5.log"
@@ -371,15 +412,15 @@ set "NOTE5=hbmk2 missing"
 exit /b 1
 :step5_havehbmk2
 pushd "%ROOT%"
-if exist "hbwebui.exe" del "hbwebui.exe"
-call :say5 "--- build: hbmk2 -st with %LIB5%"
->> "%S5%" echo "%HBMK2%" -st prg\main.prg prg\hello.prg src\bridge.c -I..\webui\include "-L%WEBUI%\dist\bcc" -l%LIB5% -ohbwebui.exe
-"%HBMK2%" -st prg\main.prg prg\hello.prg src\bridge.c -I..\webui\include "-L%WEBUI%\dist\bcc" -l%LIB5% -ohbwebui.exe >> "%S5%" 2>&1
+if exist "hbwebui_bcc.exe" del "hbwebui_bcc.exe"
+call :say5 "--- build: hbmk2 -st with %LIB5%, output hbwebui_bcc.exe (MSVC hbwebui.exe is not touched)"
+>> "%S5%" echo "%HBMK2%" -st prg\main.prg prg\hello.prg src\bridge.c -I..\webui\include "-L%WEBUI%\dist\bcc" -l%LIB5% -ohbwebui_bcc.exe
+"%HBMK2%" -st prg\main.prg prg\hello.prg src\bridge.c -I..\webui\include "-L%WEBUI%\dist\bcc" -l%LIB5% -ohbwebui_bcc.exe >> "%S5%" 2>&1
 set "R5A=%ERRORLEVEL%"
 call :say5 "hbmk2 rc=%R5A%"
 if not "%R5A%"=="0" goto step5_buildfail
-if exist "hbwebui.exe" goto step5_built
-call :say5 "[ERROR] hbmk2 returned 0 but hbwebui.exe was not created."
+if exist "hbwebui_bcc.exe" goto step5_built
+call :say5 "[ERROR] hbmk2 returned 0 but hbwebui_bcc.exe was not created."
 popd
 set "NOTE5=build: no exe"
 exit /b 1
@@ -391,20 +432,23 @@ exit /b %R5A%
 :step5_built
 copy /y "%WEBUI%\dist\webui-2.dll" "%ROOT%\webui-2.dll" >> "%S5%" 2>&1
 set "R5C=%ERRORLEVEL%"
-call :say5 "copy webui-2.dll next to hbwebui.exe rc=%R5C%"
+call :say5 "copy webui-2.dll next to hbwebui_bcc.exe rc=%R5C%"
 echo.
-echo Starting hbwebui.exe now. Click the button in the window a few times,
-echo then close the window. This script waits until hbwebui.exe exits.
+echo Starting hbwebui_bcc.exe now. Click the button in the window a few times,
+echo then close the window. This script waits until hbwebui_bcc.exe exits.
 echo Output goes to %LOGDIR%\run.log
+echo If the window does not appear or the program hangs, press Ctrl+C. cmd then
+echo asks "Terminate batch job (Y/N)?" - answer N, the script continues and the
+echo summary is still written. Answering Y ends the whole script with no summary.
 echo.
 > "%LOGDIR%\run.log" echo run started %DATE% %TIME% in %CD%
-hbwebui.exe >> "%LOGDIR%\run.log" 2>&1
+hbwebui_bcc.exe >> "%LOGDIR%\run.log" 2>&1
 set "R5B=%ERRORLEVEL%"
 >> "%LOGDIR%\run.log" echo run ended %DATE% %TIME% exit code %R5B%
-call :say5 "hbwebui.exe exit code=%R5B% (details in run.log)"
+call :say5 "hbwebui_bcc.exe exit code=%R5B% (details in run.log)"
 popd
 echo.
-echo hbwebui.exe finished with exit code %R5B%. Read the output above if any.
+echo hbwebui_bcc.exe finished with exit code %R5B%. Read the output above if any.
 pause
 set "NOTE5=build=%R5A% copy=%R5C% run=%R5B%"
 if not "%R5C%"=="0" exit /b %R5C%
@@ -429,6 +473,7 @@ echo [ERROR] hbmk2.exe not found.
 set "NOTE6=hbmk2 missing"
 exit /b 1
 :step6_run
+for %%F in (probe6a.exe probe6b.exe step-6a.txt step-6b.txt) do if exist "%LOGDIR%\%%F" del "%LOGDIR%\%%F"
 pushd "%ROOT%"
 echo.
 echo --- run 6a: default VM mode (no -st, no -mt)
