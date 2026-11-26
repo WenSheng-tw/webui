@@ -1,6 +1,6 @@
 # PoC-001：Harbour + WebUI 最小可行原型
 
-- 狀態：**待使用者核准**
+- 狀態：**已核准**（使用者於 2026-11-26 核准，實作位於 `poc/harbour-webui/`）
 - 負責人：PM（規格）、Architect（技術做法）、Back-end（實作）、QA（驗收）
 - 相關文件：[CHARTER.md](CHARTER.md)、[ENVIRONMENT.md](ENVIRONMENT.md)
 
@@ -40,6 +40,7 @@
 要點：
 
 - **隔離層**：bridge 不引用 `webui.h`，而是自行宣告用到的函式原型（只用指標與基本型別，不使用 `bool`）。WebUI 的 `webui.h` 含有 `//` 註解與 C99 語法，無法通過 `-std=c89 -pedantic-errors`。
+- **Harbour 標頭檔同樣隔離**（實作時新增）：`hbdefs.h` 使用 `long long`，`hbapi.h` 因此也無法通過 `-pedantic-errors`。bridge 自行宣告所需的 Harbour API 子集（`hb_parni`、`hb_vmDo` 等皆為真實匯出函式），並以 `HB_FUN_<NAME>` 定義 `HB_FUNC`。不採用 `HB_LONG_LONG_OFF`，因為會改變 `HB_MAXINT` 而破壞 ABI。
 - **回傳值**：WebUI 的 `bool` 回傳值不在 bridge 中讀取，以避免 ABI 型別不一致。
 - **呼叫 Harbour**：WebUI 的事件回呼在 WebUI 的執行緒中執行，回呼內以 `hb_dynsymFind`、`hb_vmPushDynSym`、`hb_vmPushNil`、`hb_vmDo` 呼叫 Harbour 函式。Harbour VM 只能在單一執行緒中使用，因此 PoC 的回呼必須序列執行，主執行緒在 `webui_wait()` 中閒置。
 - **編譯參數**：bridge 與團隊程式以 `-std=c89 -pedantic-errors`（GCC）或 BCC / MSVC 等效設定編譯。
@@ -77,4 +78,5 @@
 
 ## 8. 核准
 
-- [ ] 使用者核准本規格後，才開始實作。
+- [x] 使用者核准本規格（2026-11-26），實作開始。
+- 驗收結果見 [poc/harbour-webui/README.md](../../poc/harbour-webui/README.md)。
