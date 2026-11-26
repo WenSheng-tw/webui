@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="google" content="notranslate">
+<title>Harbour + WebUI PoC-001</title>
+<script src="webui.js"></script>
+<style>
+body { font-family: sans-serif; margin: 2em; }
+input { font-size: 1em; padding: 0.3em; }
+button { font-size: 1em; padding: 0.3em 1em; }
+#result { margin-top: 1em; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>Harbour + WebUI PoC-001</h1>
+<input id="name" type="text" value="World">
+<button id="btn" type="button">Say Hello</button>
+<p id="result">(尚未呼叫)</p>
+<script>
+document.getElementById("btn").addEventListener("click", async function () {
+    var name = document.getElementById("name").value;
+    var reply = await hello(name);
+    document.getElementById("result").textContent = reply;
+});
+</script>
+</body>
+</html>
