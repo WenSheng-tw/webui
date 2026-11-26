@@ -126,7 +126,10 @@ static int s_async = 0;
 static int s_dirty = 0;
 static int s_clean_pending = 0;
 static int s_exited = 0;
+static int s_shown = 0;
 static size_t s_cleans = 0;
+static size_t s_webui_results = 0;
+static size_t s_webui_frees = 0;
 
 void bridge_mark_dirty(void)
 {
@@ -176,6 +179,31 @@ void bridge_mark_exited(void)
 {
     bridge_mark_dirty();
     s_exited = 1;
+}
+
+int bridge_is_exited(void)
+{
+    return s_exited;
+}
+
+void bridge_mark_shown(void)
+{
+    s_shown = 1;
+}
+
+int bridge_is_shown(void)
+{
+    return s_shown;
+}
+
+void bridge_note_webui_result(void)
+{
+    s_webui_results++;
+}
+
+void bridge_note_webui_free(void)
+{
+    s_webui_frees++;
 }
 
 /* ---- handler table keyed by bind id ------------------------------------------------- */
@@ -278,7 +306,7 @@ void bridge_table_clear(void)
     s_tab_count = 0;
 }
 
-size_t bridge_bind(size_t window, const char *element, const char *handler)
+static size_t bind_common(size_t window, const char *element, const char *handler, int iface)
 {
     char upper[BRIDGE_HANDLER_NAME_MAX + 1];
     size_t len;
@@ -307,7 +335,14 @@ size_t bridge_bind(size_t window, const char *element, const char *handler)
         return 0;
     }
     bridge_ensure_async();
-    id = webui_bind(window, element, bridge_on_event);
+    if (iface)
+    {
+        id = webui_interface_bind(window, element, bridge_on_iface_event);
+    }
+    else
+    {
+        id = webui_bind(window, element, bridge_on_event);
+    }
     if (id == 0)
     {
         return 0;
@@ -318,6 +353,119 @@ size_t bridge_bind(size_t window, const char *element, const char *handler)
         return 0;
     }
     return id;
+}
+
+size_t bridge_bind(size_t window, const char *element, const char *handler)
+{
+    return bind_common(window, element, handler, 0);
+}
+
+/* ---- context slot table (rule 11) --------------------------------------------------- */
+
+/* The Harbour value is cloned into bridge storage; WebUI only ever sees the slot number
+ * (slot = index + 1, 0 means none) as its void* context. A free slot has item == NULL. */
+struct ctx_slot
+{
+    size_t window;
+    char *element;
+    void *item;
+};
+
+static struct ctx_slot *s_ctx = NULL;
+static size_t s_ctx_cap = 0;
+static size_t s_ctx_live = 0;
+
+static size_t ctx_find(size_t window, const char *element)
+{
+    size_t i;
+
+    for (i = 0; i < s_ctx_cap; i++)
+    {
+        if (s_ctx[i].item != NULL && s_ctx[i].window == window && strcmp(s_ctx[i].element, element) == 0)
+        {
+            return i + 1;
+        }
+    }
+    return 0;
+}
+
+static void ctx_release(size_t index)
+{
+    hb_itemRelease(s_ctx[index].item);
+    bridge_free(s_ctx[index].element);
+    s_ctx[index].item = NULL;
+    s_ctx[index].element = NULL;
+    s_ctx[index].window = 0;
+    s_ctx_live--;
+}
+
+/* Returns a free slot number, growing the table when needed; 0 if out of memory or full. */
+static size_t ctx_alloc(void)
+{
+    struct ctx_slot *grown;
+    size_t cap;
+    size_t i;
+
+    for (i = 0; i < s_ctx_cap; i++)
+    {
+        if (s_ctx[i].item == NULL)
+        {
+            return i + 1;
+        }
+    }
+    if (s_ctx_cap >= BRIDGE_ID_MAX)
+    {
+        return 0;
+    }
+    cap = s_ctx_cap == 0 ? 8 : s_ctx_cap * 2;
+    grown = (struct ctx_slot *) bridge_malloc(cap * sizeof(struct ctx_slot));
+    if (grown == NULL)
+    {
+        return 0;
+    }
+    for (i = 0; i < cap; i++)
+    {
+        if (i < s_ctx_cap)
+        {
+            grown[i] = s_ctx[i];
+        }
+        else
+        {
+            grown[i].window = 0;
+            grown[i].element = NULL;
+            grown[i].item = NULL;
+        }
+    }
+    bridge_free(s_ctx);
+    i = s_ctx_cap;
+    s_ctx = grown;
+    s_ctx_cap = cap;
+    return i + 1;
+}
+
+void *bridge_context_value(size_t slot)
+{
+    if (slot == 0 || slot > s_ctx_cap || s_ctx[slot - 1].item == NULL)
+    {
+        return NULL;
+    }
+    return hb_itemClone(s_ctx[slot - 1].item);
+}
+
+static void bridge_context_clear(void)
+{
+    size_t i;
+
+    for (i = 0; i < s_ctx_cap; i++)
+    {
+        if (s_ctx[i].item != NULL)
+        {
+            ctx_release(i);
+        }
+    }
+    bridge_free(s_ctx);
+    s_ctx = NULL;
+    s_ctx_cap = 0;
 }
 
 /* ---- argument helpers and rule 9 ranges --------------------------------------------- */
@@ -438,6 +586,110 @@ void HB_FUN_WEBUI_BIND(void)
     bridge_ret_size(id);
 }
 
+/* WEBUI_INTERFACE_BIND( nWindow, cElement, cHandler ) -> nBindId. Same handler convention
+ * as WEBUI_BIND (a Harbour FUNCTION called as handler(cArg, nWindow, nBind, nEvent, nType)),
+ * but WebUI binds it through webui_interface_bind. Inside the handler the interface
+ * functions (explicit window and event number) and the current-event functions both work. */
+void HB_FUN_WEBUI_INTERFACE_BIND(void)
+{
+    size_t window;
+    size_t id;
+    const char *element;
+    const char *handler;
+
+    if (!bridge_arg_window(1, &window) || !bridge_arg_string(2, "element", &element) ||
+        !bridge_arg_string(3, "handler", &handler))
+    {
+        return;
+    }
+    if (strlen(handler) == 0 || strlen(handler) > BRIDGE_HANDLER_NAME_MAX)
+    {
+        bridge_raise("handler: a function name of 1 to 64 characters is required");
+        return;
+    }
+    id = bind_common(window, element, handler, 1);
+    if (id == 0)
+    {
+        bridge_raise("handler: not a Harbour function (add REQUEST) or interface bind failed");
+        return;
+    }
+    bridge_ret_size(id);
+}
+
+/* WEBUI_SET_CONTEXT( nWindow, cElement, xValue ) -> nBindId. Rule 11. The value (NIL clears)
+ * is cloned into the bridge slot table; WebUI stores only the slot number. A new value for
+ * the same window and element releases the old one. Side effect of webui_set_context:
+ * webui_bind(window, element, NULL) registers the element (returned as nBindId; a later
+ * WEBUI_BIND of the same element returns the same id and keeps the context). */
+void HB_FUN_WEBUI_SET_CONTEXT(void)
+{
+    size_t window;
+    size_t id;
+    size_t slot;
+    const char *element;
+    void *item;
+    void *copy;
+    char *name;
+
+    if (!bridge_arg_window(1, &window) || !bridge_arg_string(2, "element", &element))
+    {
+        return;
+    }
+    if (element[0] == '\0')
+    {
+        bridge_raise("element: must not be empty");
+        return;
+    }
+    if (hb_pcount() < 3)
+    {
+        bridge_raise("context: a value (or NIL) is required");
+        return;
+    }
+    bridge_mark_dirty();
+    id = webui_bind(window, element, NULL);
+    if (id == 0)
+    {
+        bridge_raise("window: does not exist or no bind id is free");
+        return;
+    }
+    item = hb_param(3, BRIDGE_HB_IT_ANY);
+    slot = ctx_find(window, element);
+    if (item == NULL || hb_itemType(item) == 0)
+    {
+        if (slot != 0)
+        {
+            ctx_release(slot - 1);
+        }
+        webui_set_context(window, element, NULL);
+        bridge_ret_size(id);
+        return;
+    }
+    copy = hb_itemClone(item);
+    if (slot != 0)
+    {
+        hb_itemRelease(s_ctx[slot - 1].item);
+        s_ctx[slot - 1].item = copy;
+    }
+    else
+    {
+        name = bridge_strdup(element);
+        slot = name != NULL ? ctx_alloc() : 0;
+        if (slot == 0)
+        {
+            bridge_free(name);
+            hb_itemRelease(copy);
+            bridge_raise("context: out of memory or no free slot");
+            return;
+        }
+        s_ctx[slot - 1].window = window;
+        s_ctx[slot - 1].element = name;
+        s_ctx[slot - 1].item = copy;
+        s_ctx_live++;
+    }
+    webui_set_context(window, element, (void *) slot);
+    bridge_ret_size(id);
+}
+
 /* WEBUI_SET_TIMEOUT( nSeconds ): 0 (wait forever) to 60, rule 9. */
 void HB_FUN_WEBUI_SET_TIMEOUT(void)
 {
@@ -545,9 +797,11 @@ void HB_FUN_WEBUI_CLEAN(void)
     bridge_answer_all();
     webui_clean();
     bridge_table_clear();
+    bridge_context_clear();
     s_async = 0;
     s_dirty = 0;
     s_exited = 0;
+    s_shown = 0;
     s_clean_pending = 0;
     s_cleans++;
     hb_retl(1);
@@ -604,6 +858,22 @@ void HB_FUN_WEBUI_BRIDGE_STAT(void)
     else if (strcmp(name, "exited") == 0)
     {
         v = (size_t) s_exited;
+    }
+    else if (strcmp(name, "shown") == 0)
+    {
+        v = (size_t) s_shown;
+    }
+    else if (strcmp(name, "contexts") == 0)
+    {
+        v = s_ctx_live;
+    }
+    else if (strcmp(name, "webui_results") == 0)
+    {
+        v = s_webui_results;
+    }
+    else if (strcmp(name, "webui_frees") == 0)
+    {
+        v = s_webui_frees;
     }
     else
     {

@@ -32,6 +32,10 @@ void HB_FUN_WEBUI_SHOW(void)
     }
     bridge_mark_dirty();
     ok = webui_show(window, content);
+    if (ok != 0)
+    {
+        bridge_mark_shown();
+    }
     hb_retl(ok != 0);
 }
 
