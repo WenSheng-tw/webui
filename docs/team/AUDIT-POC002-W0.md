@@ -4,9 +4,9 @@ Basis: include/webui.h (112 WEBUI_EXPORT prototypes, 2.5.0-beta.4), src/webui.c 
 
 ## 0. Scope correction
 
-Scope (final, after spec revisions 1 and 2): the first CEO list named 12 functions, not 11 (set_context, get_context, webui_malloc, webui_memcpy, get_hwnd, win32_get_hwnd, set_logger, set_close_handler_wv, set_file_handler, set_file_handler_window, return_http, interface_set_response_file_handler); all 12 exist in the header. `webui_get_hwnd` and `webui_win32_get_hwnd` were then moved **into scope (W4)** by spec revision 1 (opaque OS handle, not heap memory, never freed). **Excluded = 10, in scope = 112 - 10 = 102.**
+Scope (final, after spec revisions 1 and 2 and the set_context decision): the first CEO list named 12 functions, not 11 (set_context, get_context, webui_malloc, webui_memcpy, get_hwnd, win32_get_hwnd, set_logger, set_close_handler_wv, set_file_handler, set_file_handler_window, return_http, interface_set_response_file_handler); all 12 exist in the header. `webui_get_hwnd` and `webui_win32_get_hwnd` were then moved **into scope (W4)** by spec revision 1 (opaque OS handle, not heap memory, never freed). `webui_set_context` and `webui_get_context` were then moved **into scope (W2)** by CEO decision (bridge-side slot table, see rows 5 and 6; `webui_set_context` calls `webui_bind(window, element, NULL)`). **Excluded = 8, in scope = 112 - 8 = 104.**
 
-Per wave (in scope): W1=12, W2=27, W3=27, W4=25, W5=11 (sum 102); excluded 10; header total 112.
+Per wave (in scope): W1=12, W2=29, W3=27, W4=25, W5=11 (sum 104); excluded 8; header total 112.
 
 Note: only `webui_set_config` takes an enum-typed parameter (`webui_config`, int). Browser/runtime/event enums are passed as `size_t` in the API (show_browser, browser_exist, set_runtime, get_best_browser return). `webui_event_t` pointer parameters appear in 22 in-scope functions: bridge must either mirror the struct (8 x size_t/ptr, layout test in T0.2-F) or use the `webui_interface_*` twins that need only (size_t window, size_t event_number).
 
@@ -20,8 +20,8 @@ Legend: ret = `scalar` no pointer; `WebUI-owned` do not free, copy at once; `cal
 | 2 | webui_new_window_id | `size_t webui_new_window_id(size_t window_number)` | 1344 | window | W3 | - | scalar | num 1..65534; destroys existing window with same id first | safe; destroy of live window blocks (see destroy) |
 | 3 | webui_get_new_window_id | `size_t webui_get_new_window_id(void)` | 1412 | window | W3 | - | scalar | reserves id; 0 = none free (non-fatal path calls WEBUI_ASSERT -> abort risk when exhausted) | safe |
 | 4 | webui_bind | `size_t webui_bind(size_t window, const char* element, void (*func)(webui_event_t* e))` | 2552 | bind/script | W1 | FP: func ptr kept until window destroy/clean (element string copied) | scalar | element copied by WebUI; bridge passes static trampoline; result bind id | safe; do not call from inside callback of same window while destroying |
-| 5 | webui_set_context | `void webui_set_context(size_t window, const char* element, void* context)` | 2523 | OUT | OUT | - | - | - | excluded by CEO list |
-| 6 | webui_get_context | `void* webui_get_context(webui_event_t* e)` | 2499 | OUT | OUT | - | - | - | excluded by CEO list |
+| 5 | webui_set_context | `void webui_set_context(size_t window, const char* element, void* context)` | 2523 | bind/script | W2 | context pointer kept (webui.c:2545 `cb_context[cb_index]`); **side effect: calls `webui_bind(window, element, NULL)` (webui.c:2542)**, registering the element with no handler | void | bridge-side slot table: copy the Harbour value into bridge storage, pass the slot number as `void*` (never a Harbour pointer); replacing or clearing an element's context releases the old slot; all slots released after `webui_clean` (not in callback); bind side effect means the element appears bound, document it | safe; same locking as bind |
+| 6 | webui_get_context | `void* webui_get_context(webui_event_t* e)` | 2499 | bind/script | W2 | - | opaque slot number (`void*` set by set_context; NULL if none/event dead; never free) | needs event struct: rebuild from (window, event_number, element) or look up by bind id; map slot number back to the stored Harbour value (NIL for NULL or an unknown slot) | safe in callback; reads `cb_context[cb_index]` of the element |
 | 7 | webui_get_best_browser | `size_t webui_get_best_browser(size_t window)` | 2622 | show | W3 | - | scalar | size_t browser id | safe |
 | 8 | webui_show | `bool webui_show(size_t window, const char* content)` | 2433 | show | W1 | - | scalar | copy content with hb_parc not needed (WebUI copies); return hb_retl | BLOCKS up to startup_timeout (default 15 s) waiting for window connection; must be main thread in WebView mode; hazard in callback (blocks callback thread) |
 | 9 | webui_show_client | `bool webui_show_client(webui_event_t* e, const char* content)` | 2296 | show | W3 | - | scalar | needs webui_event_t* -> bridge rebuilds struct from (window,event_number,connection_id) or use interface_show_client | callback-only; blocks like show |
@@ -188,7 +188,7 @@ Proposed layout (to be created in W0 implementation, e.g. poc/harbour-webui/test
 | A1 | bool is 1 byte, enum webui_config is int, size_t = pointer size, long long = 8 | C11 `_Static_assert` in abi_real.c (real header) | all hold |
 | A2 | Mirrored `webui_event_t` equals real | export sizeof+offsetof of 8 fields from both TUs, compare at runtime | identical (64 B on x86-64, 32 B on x32) |
 | A3 | Enum numbers (webui_config, webui_browser 0..13, webui_runtime 0..3, webui_event 0..4, logger level) | script greps header, generates `abi_enums.h`; bridge constants compared | 100 percent identical; script fails if header gains/changes names (drift check) |
-| A4 | Prototype drift | script parses all 112 `WEBUI_EXPORT` prototypes, normalizes bool->ubool/int, compares with bridge declarations of the 102 in-scope names | zero diffs, zero missing, zero extra |
+| A4 | Prototype drift | script parses all 112 `WEBUI_EXPORT` prototypes, normalizes bool->ubool/int, compares with bridge declarations of the 104 in-scope names | zero diffs, zero missing, zero extra |
 | B1 | bool return read as `unsigned char` | objdump -d of each bool-returning function in the .a: epilogue writes only `%al` (`setcc`, `mov $0/1,%al/%eax`); informational | no function relies on upper bytes; list attached to report |
 | C1 | bool return runtime | pairs giving both 1 and 0 headless: `set_root_folder("/tmp")`/`("/nonexistent")`, `set_port(used)`/`set_port(free)`, `is_shown`, `browser_exist`, `interface_is_app_running`; call between each an asm/noinline function that fills rax/eax with 0xDEADBEEF (dirty-register control) | 1000 iterations, every value in {0,1}, equal to the value read through the real-header `bool` call, 0 mismatches. Negative control (read as int) is informational only |
 | C2 | bool param as int | `webui_set_public(w,1)` then `webui_start_server`: listener is 0.0.0.0; `(w,0)`: 127.0.0.1 (parse /proc/net/tcp). Called through int-declared prototype and through real bool prototype | identical observable result; bridge helper normalizes `hb_parl ? 1 : 0`; passing 256 documented as unsupported |
@@ -217,11 +217,11 @@ Known gaps in this design: B1 is x86-64 only; bool-in-AL on x86 (BCC/MSVC) is re
 
 ## 7. W0 exit review (Architect, after Back-end W0 implementation, commits 4ef7ed7..cabf7ba)
 
-Reviewed: poc/harbour-webui/w0/W0-REPORT.md, functions.txt, gen_functions.py, check_protos.py, check_bool_abi.py, abi_*.c, run-abi.sh, results/. Re-ran `gen_functions.py` (18 ok) and `check_protos.py` (14 ok) here; independent count of functions.txt: 112 rows, waves 12/27/27/25/11, excluded 10, area totals 28/15/10/9/24/2/7/3/4 equal to spec section 1.
+Reviewed: poc/harbour-webui/w0/W0-REPORT.md, functions.txt, gen_functions.py, check_protos.py, check_bool_abi.py, abi_*.c, run-abi.sh, results/. Re-ran `gen_functions.py` (18 ok) and `check_protos.py` (14 ok) here; independent count of functions.txt at that time: 112 rows, waves 12/27/27/25/11, excluded 10, area totals 28/15/10/9/24/2/7/3/4 equal to spec section 1.
 
 ### 7.1 Function list verdict: APPROVED
 
-112 header functions, 102 in scope, 10 excluded; waves 12/27/27/25/11. The excluded set equals the 10 names of spec section 1; the W1 set equals the 12 names of spec section 7; hwnd functions are W4. No misplaced function found. This audit table (section 1) now matches functions.txt row for row (rows 63 and 64 corrected, summary lines corrected).
+[Review state at commit a568c06; superseded by the set_context decision: now 104 in scope, 8 excluded, waves 12/29/27/25/11.] 112 header functions, 102 in scope, 10 excluded; waves 12/27/27/25/11. The excluded set equalled the 10 names of spec section 1; the W1 set equals the 12 names of spec section 7; hwnd functions are W4. No misplaced function found. This audit table (section 1) now matches functions.txt row for row (rows 63 and 64 corrected, summary lines corrected).
 
 ### 7.2 Back-end findings and effect on spec 2.1
 
@@ -248,3 +248,14 @@ Fallback if valgrind cannot be installed (Back-end environment): evidence plan, 
 2. Bridge allocation counters in a debug build (`hb_xgrab`/`hb_xfree` wrappers and the `webui_encode`/`decode` `webui_free` pairs, plus handler-table entries), asserted 0 after `WEBUI_CLEAN`; negative control: a deliberately leaked block must make the counter non-zero.
 3. Repeat-cycle test: new_window, show, bind, call, destroy, clean x 20; RSS growth after warm-up below a fixed threshold, reported as evidence of no unbounded growth.
 Note for the report: WebUI-internal tracked memory is only reclaimed by `webui_clean` (section 2 rule 7), so counters and LSan must be read after `webui_clean`, never at `webui_exit`.
+
+## 8. Amendment: set_context and get_context in scope (W2)
+
+CEO decision approved by the user. Counts: excluded 8 (malloc, memcpy, set_logger, set_close_handler_wv, set_file_handler, set_file_handler_window, return_http, interface_set_response_file_handler), in scope 104, waves W1=12, W2=29, W3=27, W4=25, W5=11. Back-end `functions.txt`, `gen_functions.py` and the spec must be updated in parallel to these numbers (area counts: bind/script 15 -> 17).
+
+Bridge rules for the pair (proposal for spec 2.1, not edited here):
+1. The context is a bridge-side slot table: the Harbour value is copied into bridge storage (hb_itemNew/hb_itemCopy), the slot number is passed to WebUI as `void*` (slot 0 = none/NULL); no Harbour pointer or item address ever reaches WebUI.
+2. Setting a context on an element that already has one releases the previous slot; passing NIL releases it and stores NULL.
+3. All slots are released after `webui_clean` (or `webui_destroy` of the window for that window's slots), never inside a callback of that element.
+4. `webui_set_context` calls `webui_bind(window, element, NULL)` and returns the bind id internally unused: the element becomes registered with no handler, and writes `cb_context[cb_index]` even if the bind failed (index 0, webui.c:2542-2545). The wrapper must call it only for a valid window and a non-empty element, and tests must cover "set_context on an unbound element then bind", to confirm the later `webui_bind` handler and the context coexist.
+5. `webui_get_context` reads by (window, event element): in the queued-event design (2.1 rule 3) the queued record must carry the element name, or the bind id, so the main thread can look the slot up after the callback returned.
