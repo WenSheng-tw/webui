@@ -20,15 +20,17 @@
 | 資料夾（約 3） | root_folder、default_root_folder、browser_folder |
 | 其他 | encode、decode、free、get_mime_type 等 |
 
-**排除（共 12 個）：**
+**排除（共 10 個）：**
 
 | 函式 | 原因 |
 |---|---|
-| `webui_set_context`、`webui_get_context`、`webui_malloc`、`webui_memcpy`、`webui_get_hwnd`、`webui_win32_get_hwnd` | 回傳或接收原始指標，Harbour 無法安全持有 |
+| `webui_set_context`、`webui_get_context`、`webui_malloc`、`webui_memcpy` | 接收或回傳由呼叫端擁有的原始指標或配置記憶體，Harbour 無法安全持有 |
 | `webui_set_logger`、`webui_set_close_handler_wv`、`webui_set_file_handler`、`webui_set_file_handler_window` | 需要把回呼傳到 Harbour，並回傳不屬於 Harbour 的記憶體 |
 | `webui_return_http`、`webui_interface_set_response_file_handler` | 同上 |
 
-範圍內共 100 個函式。
+範圍內共 102 個函式。
+
+**視窗控制代碼（修訂 1 納入範圍，W4）：** `webui_get_hwnd` 與 `webui_win32_get_hwnd` 回傳不透明的作業系統視窗控制代碼，不是堆積記憶體，bridge 不擁有它，**不得釋放**。Windows 上為 HWND；Linux 上 `webui_get_hwnd` 只在 WebView 模式回傳 GtkWindow*，其餘為 NULL；macOS 為 NULL。包裝函式以 `hb_retptr` 回傳 Harbour 指標項目，NULL 時改回傳 NIL。建議用指標項目而非 `hb_retnint` 數字：指標項目不能被誤做算術，也不受 2^53 精度限制；hbwin 等 Win32 函式本來就接受指標項目，需要數字時再用 Harbour 端轉換。
 
 **取代而非排除：** 取用 `webui_event_t*` 的函式，改用 `interface_*` 版（以視窗與事件編號為參數）。Harbour 端不接觸任何指標。
 
@@ -83,7 +85,7 @@
 8. **次要：** `.hrb` 未卸載會干擾 valgrind 的洩漏判斷，需 `hb_hrbUnload`。
 9. **次要：** `.ch` 不在雜湊內。
 
-工作量（技術描述）：新增 5 個 C 檔案、約 100 個包裝函式、每組一支測試 `.prg`，另有 `bridge_request.prg`、雜湊與載入輔助、測試執行器與兩個建置腳本。需稽核約 20 個保留字串的函式。不動 `webui.c`，只改 `bridge.c` 的結構與 `main.prg`。
+工作量（技術描述）：新增 5 個 C 檔案、約 102 個包裝函式、每組一支測試 `.prg`，另有 `bridge_request.prg`、雜湊與載入輔助、測試執行器與兩個建置腳本。需稽核約 20 個保留字串的函式。不動 `webui.c`，只改 `bridge.c` 的結構與 `main.prg`。
 
 ## 7. 分波計畫
 
@@ -95,7 +97,7 @@
 | W1 | 基礎：雙模式測試執行器、md5 輔助、處理函式表、記憶體計數器、生命週期（wait、wait_async、exit、clean、timeout）、PoC-001 用到的函式 | Back-end，QA 驗 | 約 12 | 執行器自測、A13 四項雜湊規則 | A6 至 A8、A10 不退化、A11 至 A14 完整驗證 |
 | W2 | 事件與字串：get_*、get_*_at、return_*、`interface_*` 事件版、encode、decode、free、get_mime_type | Back-end，QA 驗 | 約 34 | 每函式一個測試；encode 與 decode 的釋放路徑 | A6 至 A8、A10、A11 至 A14 |
 | W3 | 顯示、瀏覽器、腳本：show 系列、start_server、navigate、get_url、run、script、send_raw 及其 client 與 interface 版 | Back-end，QA 驗 | 約 22 | 需 Xvfb 的整合測試；script 緩衝區釋放 | 同上 |
-| W4 | 視窗管理：size、position、kiosk、icon、focus、minimize 等 | Back-end，QA 驗 | 約 18 | 逐項呼叫並檢查回傳 | 同上 |
+| W4 | 視窗管理：size、position、kiosk、icon、focus、minimize、get_hwnd、win32_get_hwnd 等 | Back-end，QA 驗 | 約 20 | 逐項呼叫並檢查回傳；`get_hwnd` 系列在 Linux 測無效視窗編號與非 WebView 模式回傳 NIL（真正的 HWND 延後到 Windows 驗證） | 同上 |
 | W5 | 設定、網路、資料夾：set_config、profile、proxy、TLS、port、root_folder、last_error | Back-end，QA 驗 | 約 14 | 逐項測試；保留字串的釋放 | 同上，並做全量 valgrind |
 
 ## 8. 雙模式測試
@@ -141,3 +143,4 @@
 | 修訂 | 日期 | 內容 | 狀態 |
 |---|---|---|---|
 | 0 | 2026-11-26 | 初版：完整 API 綁定、記憶體回收、分波計畫、雙模式測試 | 使用者核准，2026-11-26 |
+| 1 | 2026-11-26 | `webui_get_hwnd`、`webui_win32_get_hwnd` 由排除改為範圍內（W4），以 `hb_retptr` 回傳、不釋放；排除 12 改 10，範圍內 100 改 102，W4 約 18 改約 20；Windows 真實 HWND 測試延後 | 依使用者提問修訂，2026-11-26 |
