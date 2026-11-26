@@ -4,9 +4,9 @@ Basis: include/webui.h (112 WEBUI_EXPORT prototypes, 2.5.0-beta.4), src/webui.c 
 
 ## 0. Scope correction
 
-CEO list names 12 functions (set_context, get_context, webui_malloc, webui_memcpy, get_hwnd, win32_get_hwnd, set_logger, set_close_handler_wv, set_file_handler, set_file_handler_window, return_http, interface_set_response_file_handler), not 11. All 12 exist in the header. In scope = 112 - 12 = **100**.
+Scope (final, after spec revisions 1 and 2): the first CEO list named 12 functions, not 11 (set_context, get_context, webui_malloc, webui_memcpy, get_hwnd, win32_get_hwnd, set_logger, set_close_handler_wv, set_file_handler, set_file_handler_window, return_http, interface_set_response_file_handler); all 12 exist in the header. `webui_get_hwnd` and `webui_win32_get_hwnd` were then moved **into scope (W4)** by spec revision 1 (opaque OS handle, not heap memory, never freed). **Excluded = 10, in scope = 112 - 10 = 102.**
 
-Per wave (in scope): W1=12, W2=27, W3=27, W4=23, W5=11 (sum 100).
+Per wave (in scope): W1=12, W2=27, W3=27, W4=25, W5=11 (sum 102); excluded 10; header total 112.
 
 Note: only `webui_set_config` takes an enum-typed parameter (`webui_config`, int). Browser/runtime/event enums are passed as `size_t` in the API (show_browser, browser_exist, set_runtime, get_best_browser return). `webui_event_t` pointer parameters appear in 22 in-scope functions: bridge must either mirror the struct (8 x size_t/ptr, layout test in T0.2-F) or use the `webui_interface_*` twins that need only (size_t window, size_t event_number).
 
@@ -78,8 +78,8 @@ Legend: ret = `scalar` no pointer; `WebUI-owned` do not free, copy at once; `cal
 | 60 | webui_delete_profile | `void webui_delete_profile(size_t window)` | 2207 | window | W4 | - | void | deletes profile folder; fs | BLOCKS on fs |
 | 61 | webui_get_parent_process_id | `size_t webui_get_parent_process_id(size_t window)` | 2975 | other | W5 | - | scalar | size_t pid | safe |
 | 62 | webui_get_child_process_id | `size_t webui_get_child_process_id(size_t window)` | 3308 | other | W5 | - | scalar | size_t pid (browser child; 0 if none) | safe |
-| 63 | webui_win32_get_hwnd | `void* webui_win32_get_hwnd(size_t window)` | 3325 | OUT | OUT | - | - | - | excluded by CEO list |
-| 64 | webui_get_hwnd | `void* webui_get_hwnd(size_t window)` | 3371 | OUT | OUT | - | - | - | excluded by CEO list |
+| 63 | webui_win32_get_hwnd | `void* webui_win32_get_hwnd(size_t window)` | 3325 | window | W4 | - | opaque OS handle (not heap, never free) | `hb_retptr`, NIL when NULL; non-Windows always NULL (webui.c:3339-3368); do not convert to number | safe; Windows non-WebView mode scans top-level windows (up to 10000 iterations) |
+| 64 | webui_get_hwnd | `void* webui_get_hwnd(size_t window)` | 3371 | window | W4 | - | opaque OS handle (not heap, never free) | `hb_retptr`, NIL when NULL; Windows = HWND, Linux = GtkWindow* only in WebView mode else NULL, macOS NULL (webui.c:3377-3400) | safe |
 | 65 | webui_get_port | `size_t webui_get_port(size_t window)` | 3020 | network/port | W5 | - | scalar | size_t port <= 65535 | safe |
 | 66 | webui_set_port | `bool webui_set_port(size_t window, size_t port)` | 3281 | network/port | W5 | - | scalar | size_t port; false if in use | safe; reloads running server |
 | 67 | webui_get_free_port | `size_t webui_get_free_port(void)` | 3008 | network/port | W5 | - | scalar | probes sockets | safe |
@@ -92,7 +92,7 @@ Legend: ret = `scalar` no pointer; `WebUI-owned` do not free, copy at once; `cal
 | 74 | webui_set_tls_certificate | `bool webui_set_tls_certificate(const char* certificate_pem, const char* private_key_pem)` | 3128 | network/port | W5 | - | scalar | copies PEMs; ON NON-TLS LIB (libwebui-2-static.a) => WEBUI_ASSERT => webui_exit + assert(0) = PROCESS ABORT (webui.c:3181, 5377-5385): bridge must NOT call it unless built with -DWEBUI_TLS (use link-time guard or return false) | safe on TLS build |
 | 75 | webui_run | `void webui_run(size_t window, const char* script)` | 1028 | bind/script | W3 | - | void | fire and forget; script copied | safe in callback; non-blocking |
 | 76 | webui_run_client | `void webui_run_client(webui_event_t* e, const char* script)` | 994 | bind/script | W3 | - | void | needs event struct (or interface_run_client) | safe in callback; non-blocking |
-| 77 | webui_script | `bool webui_script(size_t window, const char* script, size_t timeout, char* buffer, size_t buffer_length)` | 1280 | bind/script | W3 | - | bool | caller buffer zeroed first, filled <= len-1, WebUI keeps nothing after return; Harbour: preallocate with hb_xgrab, hb_retclen after; timeout 0 or >86400 = WAIT FOREVER | BLOCKS (1 ms poll) until result/timeout; inside callback no deadlock (CMD_JS bypasses mutex_receive) but blocks callback thread and, in ui_event_blocking mode, queues other UI events behind it; multi_client mode returns false |
+| 77 | webui_script | `bool webui_script(size_t window, const char* script, size_t timeout, char* buffer, size_t buffer_length)` | 1280 | bind/script | W3 | - | bool | caller buffer zeroed first, filled <= len-1, WebUI keeps nothing after return; **false on JS exception, but the buffer then holds the error text (measured, W0 F2); false on timeout / not connected / multi_client leaves it empty, so false never means "buffer is a result"**; Harbour: preallocate with hb_xgrab, hb_retclen after; timeout 0 or >86400 = WAIT FOREVER | BLOCKS (1 ms poll) until result/timeout; inside callback no deadlock (CMD_JS bypasses mutex_receive) but blocks callback thread and, in ui_event_blocking mode, queues other UI events behind it; multi_client mode returns false |
 | 78 | webui_script_client | `bool webui_script_client(webui_event_t* e, const char* script, size_t timeout, char* buffer, size_t buffer_length)` | 1125 | bind/script | W3 | - | bool | as webui_script, event struct needed (or interface_script_client) | BLOCKS like script |
 | 79 | webui_set_runtime | `void webui_set_runtime(size_t window, size_t runtime)` | 4587 | bind/script | W3 | - | void | size_t runtime 0..3 | safe |
 | 80 | webui_get_count | `size_t webui_get_count(webui_event_t* e)` | 2671 | strings/returns | W2 | - | scalar | hb_retnd / hb_retns; value < 2^31 in practice | safe in callback; returns 0/""/false if event dead |
@@ -188,7 +188,7 @@ Proposed layout (to be created in W0 implementation, e.g. poc/harbour-webui/test
 | A1 | bool is 1 byte, enum webui_config is int, size_t = pointer size, long long = 8 | C11 `_Static_assert` in abi_real.c (real header) | all hold |
 | A2 | Mirrored `webui_event_t` equals real | export sizeof+offsetof of 8 fields from both TUs, compare at runtime | identical (64 B on x86-64, 32 B on x32) |
 | A3 | Enum numbers (webui_config, webui_browser 0..13, webui_runtime 0..3, webui_event 0..4, logger level) | script greps header, generates `abi_enums.h`; bridge constants compared | 100 percent identical; script fails if header gains/changes names (drift check) |
-| A4 | Prototype drift | script parses all 112 `WEBUI_EXPORT` prototypes, normalizes bool->ubool/int, compares with bridge declarations of the 100 in-scope names | zero diffs, zero missing, zero extra |
+| A4 | Prototype drift | script parses all 112 `WEBUI_EXPORT` prototypes, normalizes bool->ubool/int, compares with bridge declarations of the 102 in-scope names | zero diffs, zero missing, zero extra |
 | B1 | bool return read as `unsigned char` | objdump -d of each bool-returning function in the .a: epilogue writes only `%al` (`setcc`, `mov $0/1,%al/%eax`); informational | no function relies on upper bytes; list attached to report |
 | C1 | bool return runtime | pairs giving both 1 and 0 headless: `set_root_folder("/tmp")`/`("/nonexistent")`, `set_port(used)`/`set_port(free)`, `is_shown`, `browser_exist`, `interface_is_app_running`; call between each an asm/noinline function that fills rax/eax with 0xDEADBEEF (dirty-register control) | 1000 iterations, every value in {0,1}, equal to the value read through the real-header `bool` call, 0 mismatches. Negative control (read as int) is informational only |
 | C2 | bool param as int | `webui_set_public(w,1)` then `webui_start_server`: listener is 0.0.0.0; `(w,0)`: 127.0.0.1 (parse /proc/net/tcp). Called through int-declared prototype and through real bool prototype | identical observable result; bridge helper normalizes `hb_parl ? 1 : 0`; passing 256 documented as unsupported |
@@ -196,7 +196,7 @@ Proposed layout (to be created in W0 implementation, e.g. poc/harbour-webui/test
 | D1 | size_t through double | bridge helpers `hb_n2size()` / `size2hb()` over {0,1,65535,2^31-1,2^32-1,2^53}; also 2^53+1, 2^64, -1, NaN, 1.5 | exact round trip up to 2^53; others rejected (error, not UB) |
 | D2 | real id ranges | 200 windows via new_window/new_window_id (<=65535), event_number from 10 000 live events, port, pid | all values < 2^31 (event_number) / <= 65535 (ids) and round-trip through double |
 | D3 | int64 | abi_i64.c: `return_int(LLONG_MIN, LLONG_MAX, 0, -1)` observed by JS as the decimal string; JS sends string "9223372036854775807" and `get_int_at` returns LLONG_MAX | exact decimal equality; `int64_to_hb` exact for \|v\|<=2^53 and signals overflow (returns string) beyond |
-| E1 | live callback path (Xvfb + Chrome, same recipe as PoC-001 acceptance) | page calls `webui.call('f', 123, 'x', true, 1.5)`; trampoline using mirrored struct and `webui_bind` | count = number of JS args (5), get_int_at(0)=123, string "x", bool 1, float 1.5, element "f", window id equal, callback thread != main thread |
+| E1 | live callback path (Xvfb + Chrome, same recipe as PoC-001 acceptance) | page calls `webui.call('f', 123, 'x', true, 1.5)`; trampoline using mirrored struct and `webui_bind` | count = number of JS args (4: 123, 'x', true, 1.5; the function name is not counted), get_int_at(0)=123, string "x", bool 1, float 1.5, element "f", window id equal, callback thread != main thread |
 | E2 | script result + bool return | `webui_script(w,"return 40+2;",5,buf,64)` then a throwing script | true + "42"; false for error; buffer zeroed first |
 | E3 | async response | `set_config(asynchronous_response,1)`, trampoline queues event, main thread calls return_* later | JS receives the late value; event_number stays valid until return |
 
@@ -214,3 +214,37 @@ xvfb-run -a -s "-screen 0 1280x1024x24" ./abi_test --live   # E1-E3, D2, D3
 Matrix: {-O0, -O2} x {gcc 13, +ASan/UBSan build of the bridge TU}; output TAP (`ok`/`not ok`), exit code != 0 on any failure. Hard blockers for Win32 re-run (deferred): `-m32` multilib (absent here) or vs2019-x32; expected differences are only sizeof(struct)=32 and `long long` passed in two stack slots.
 
 Known gaps in this design: B1 is x86-64 only; bool-in-AL on x86 (BCC/MSVC) is reasoned, not measured; `webui_set_tls_certificate` is excluded from runtime tests because it aborts the process on the non-TLS library.
+
+## 7. W0 exit review (Architect, after Back-end W0 implementation, commits 4ef7ed7..cabf7ba)
+
+Reviewed: poc/harbour-webui/w0/W0-REPORT.md, functions.txt, gen_functions.py, check_protos.py, check_bool_abi.py, abi_*.c, run-abi.sh, results/. Re-ran `gen_functions.py` (18 ok) and `check_protos.py` (14 ok) here; independent count of functions.txt: 112 rows, waves 12/27/27/25/11, excluded 10, area totals 28/15/10/9/24/2/7/3/4 equal to spec section 1.
+
+### 7.1 Function list verdict: APPROVED
+
+112 header functions, 102 in scope, 10 excluded; waves 12/27/27/25/11. The excluded set equals the 10 names of spec section 1; the W1 set equals the 12 names of spec section 7; hwnd functions are W4. No misplaced function found. This audit table (section 1) now matches functions.txt row for row (rows 63 and 64 corrected, summary lines corrected).
+
+### 7.2 Back-end findings and effect on spec 2.1
+
+| Finding | Effect on bridge rules | Required spec text change (for PM, spec not edited by Architect) |
+|---|---|---|
+| F1: E1 expected 5 args, measured 4 | Audit typo only: `webui.call` first parameter is the function name, not an argument. `get_count` = JS args only, index 0 = first argument. Rule 9 (index <= 16) unchanged. | None to 2.1. Optional note in spec 7 W2 test row: "`get_count` excludes the function name". |
+| F2: `webui_script` false on JS exception, buffer holds error text | Changes the wrapper contract. Spec 2.1 and 3 only talk about buffer lifetime, not result semantics. | Add rule 11 to 2.1: "`WEBUI_SCRIPT` returns two values, success flag and buffer text. The buffer is a result only when the flag is true. When the flag is false the text is the JS error message after an exception, and empty after timeout, no connection or multi_client; the wrapper must return it as error text, never as a result. The buffer is zeroed before the call and WebUI keeps no pointer after return." Add to W3 required tests: exception, timeout, truncation to size-1, late result not written. |
+| F3: no bool high-byte pollution observed on this binary | No change; B shows 18 exits may leave undefined high bytes. | Keep section 4 line "bool return declared `unsigned char`" and append: "reading as `int` is forbidden even if tests cannot reproduce pollution; bool parameters normalized with `? 1 : 0`." |
+| F4: hwnd rows | Audit fixed (this commit). | None. |
+| F5: C99 cross-compile in one TU impossible (`ubool` vs `bool`, duplicate struct) | No bridge rule change. | Replace the last bullet of section 4 with: "Declaration conformance is proven by `abi_real.c` compiled against the real header (C99) plus the A4 script (all 112 prototypes, normalized) with zero diffs." |
+| F6: O2 headless run about 95 s (3000-call cases) | None. | None; keep 1000 iterations in section 7.1 C group, or allow 300 for `set_port` and `browser_exist` only if CI time requires (PM decision). |
+| F7: ASan LeakSanitizer is not a valgrind substitute | See 7.3. | A8 wording change, 7.3. |
+| F8: client_id / connection_id always 0 in single client mode | None in W1/W2. | W3 test note: multi-client behaviour is checked only if multi_client tests are added. |
+| `folder_monitor` effect not observed | No bridge rule change: `webui_set_config` just forwards the enum as int; effect is the library's. But test coverage is incomplete. | Spec 5 A6 / W1 test: "set_config is tested for all six values; five have an observed effect, `folder_monitor` is call-only (no crash) until W5, where `set_root_folder` plus a file change on a shown folder window observes it". Add that observation to the W5 required tests. |
+
+### 7.3 A8 (valgrind): can be met; fallback plan
+
+valgrind 3.22.0 **is** installed on this agent VM (`/usr/bin/valgrind`), unlike the Back-end environment, so the evidence can be produced here or in CI. Trial on the W0 binary (`valgrind --leak-check=full --errors-for-leak-kinds=definite --error-exitcode=9 -q build/O0/abi_test --headless`, 2 min, all 57 TAP ok): exit 9 because of exactly **2 definite-loss records, both rooted in `dlopen` constructors of GTK/glib** (loaded by `webui_set_center` through `_webui_load_gtk_and_webkit`); **0 records with WebUI or bridge frames**. This is the third-party class of spec risk 7.
+
+Proposed A8 text: "valgrind `--leak-check=full` reports 0 definite leaks with WebUI or bridge frames; leaks whose stack is rooted in `dlopen`/`_dl_init` of system libraries (GTK, glib) are matched by a committed suppression file and listed separately in the report; allocation and release counters read 0 after `WEBUI_CLEAN`."
+
+Fallback if valgrind cannot be installed (Back-end environment): evidence plan, all three required together:
+1. ASan with LeakSanitizer (`ASAN_OPTIONS=detect_leaks=1`) over the full wave test run; the library itself is not instrumented, so LSan sees `malloc` interposition and reports unfreed blocks reachable by no pointer at exit (works for the static library too).
+2. Bridge allocation counters in a debug build (`hb_xgrab`/`hb_xfree` wrappers and the `webui_encode`/`decode` `webui_free` pairs, plus handler-table entries), asserted 0 after `WEBUI_CLEAN`; negative control: a deliberately leaked block must make the counter non-zero.
+3. Repeat-cycle test: new_window, show, bind, call, destroy, clean x 20; RSS growth after warm-up below a fixed threshold, reported as evidence of no unbounded growth.
+Note for the report: WebUI-internal tracked memory is only reclaimed by `webui_clean` (section 2 rule 7), so counters and LSan must be read after `webui_clean`, never at `webui_exit`.
