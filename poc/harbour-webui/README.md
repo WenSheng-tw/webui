@@ -95,6 +95,28 @@ BCC 7.4 的預設 C 標準與 C89 不同（見 ENVIRONMENT.md 第 2.1 節），b
 
 同樣尚未驗證。bcc_x32 失敗時改以此環境為主。
 
+### 一鍵建置腳本
+
+- 腳本：`scripts\build-vs2019-x32.bat`（CRLF 換行、純 ASCII）。
+- 狀態：**UNVERIFIED on Windows**（撰寫時無法在 Windows 上執行，第一次執行請回報結果）。
+- 前提：先以 nmake 建好 `d:\hbdev32\webui\dist\webui-2-static.lib`（見下方步驟 1）。
+- 用法：開一個**全新乾淨**的命令提示字元（`vcvarsall.bat` 只能呼叫一次；若視窗已有 VS 環境，腳本會拒絕執行），然後執行：
+
+```bat
+cd /d d:\hbdev32\harbour-webui
+scripts\build-vs2019-x32.bat
+```
+
+- 腳本會依序：設定 ENVIRONMENT.md 所列的 `HB_*` 變數與 `chcp 65001`、檢查 `hbmk2.exe` 與四個來源檔（`prg\main.prg`、`prg\hello.prg`、`src\bridge.c`、`ui\index.html`）、檢查 WebUI 靜態函式庫、呼叫一次 `vcvarsall.bat x86`、執行 hbmk2。成功時印出 `hbwebui.exe` 的完整路徑；失敗時結束碼為 1。
+- 假設值（無法由雲端確認，若不符請改腳本頂端的設定）：`vcvarsall.bat` 位於 `C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat`（可先設定環境變數 `VCVARSALL` 覆蓋）；OpenSSL、curl、ADS 路徑以 `d:\hbdev32\` 為根，依 ENVIRONMENT.md 的相對路徑組成。
+- 記錄檔：`scripts\build-vs2019-x32.log`，同一份輸出也會在結束後顯示在主控台（不是即時輸出，hbmk2 執行期間主控台不會有畫面）。
+- 失敗時：
+  1. 開啟 `scripts\build-vs2019-x32.log`，搜尋 `[ERROR]`，最後一個 `[ERROR]` 行即為失敗的步驟（缺檔、缺 `webui-2-static.lib`、`vcvarsall.bat` 找不到、hbmk2 回傳非零）。
+  2. 若是 hbmk2 失敗，其編譯器與連結器的訊息在 `Running hbmk2 ...` 之後。
+  3. 回報時請附上整份記錄檔。
+
+以下為不使用腳本時的手動步驟：
+
 ```bat
 rem 1. 在 vs2019-x32 環境建置 WebUI 靜態函式庫（倉庫根目錄 Makefile 為 nmake 版本，產出 dist\webui-2-static.lib）
 cd d:\hbdev32\webui
