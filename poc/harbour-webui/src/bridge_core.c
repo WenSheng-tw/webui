@@ -500,9 +500,11 @@ void HB_FUN_WEBUI_WAIT_ASYNC(void)
     hb_retl(running);
 }
 
-/* WEBUI_EXIT(): closes every window; WEBUI_WAIT returns. Allowed inside a handler. */
+/* WEBUI_EXIT(): closes every window; WEBUI_WAIT returns. Allowed inside a handler, where
+ * it first answers the open call with an empty string (see bridge_answer_all). */
 void HB_FUN_WEBUI_EXIT(void)
 {
+    bridge_answer_all();
     webui_exit();
     hb_ret();
 }
@@ -514,6 +516,7 @@ void HB_FUN_WEBUI_CLEAN(void)
 {
     if (bridge_in_dispatch())
     {
+        bridge_answer_all();
         webui_exit();
         s_clean_pending = 1;
         hb_retl(0);
@@ -525,7 +528,7 @@ void HB_FUN_WEBUI_CLEAN(void)
         hb_retl(0);
         return;
     }
-    bridge_queue_discard();
+    bridge_answer_all();
     webui_clean();
     bridge_table_clear();
     s_async = 0;

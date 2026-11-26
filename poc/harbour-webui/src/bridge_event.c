@@ -159,6 +159,28 @@ static void call_handler(struct bridge_event *ev, const char *arg)
     }
 }
 
+/* Answers the call being dispatched (if still open) and every queued call with an empty
+ * string. WebUI keeps the memory of an event that is still unanswered when the application
+ * exits (by design, the late response is ignored), so WEBUI_EXIT and WEBUI_CLEAN call this
+ * first. Calls that arrive after the exit began cannot be helped. */
+void bridge_answer_all(void)
+{
+    struct bridge_event *ev;
+
+    if (s_cur != NULL && !s_cur_responded)
+    {
+        webui_return_string(s_cur->e, "");
+        s_cur_responded = 1;
+        s_auto++;
+    }
+    while ((ev = queue_take()) != NULL)
+    {
+        webui_return_string(ev->e, "");
+        s_auto++;
+        bridge_free(ev);
+    }
+}
+
 /* Dispatches every queued call. Returns how many were dispatched. A handler that calls
  * WEBUI_PUMP or WEBUI_WAIT_ASYNC does not re-enter (those calls dispatch nothing). */
 int bridge_pump(void)

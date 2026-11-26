@@ -100,6 +100,7 @@ int bridge_pump(void);
 int bridge_in_dispatch(void);
 size_t bridge_queue_length(void);
 void bridge_queue_discard(void);
+void bridge_answer_all(void);
 /* Statistics for tests: 0 queued, 1 dispatched, 2 auto-responded, 3 handler-missing. */
 size_t bridge_event_stat(int which);
 
