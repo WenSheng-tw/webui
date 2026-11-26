@@ -48,7 +48,7 @@
 
 1. 綁定回呼是 C 的靜態轉接函式（trampoline），依 bind id 查表；不得把 Harbour 符號或閉包直接交給 WebUI。
 2. 表格項目只在 `webui_destroy` 或 `webui_clean` 之後釋放，不得在回呼之內釋放。
-3. **必須**採 `asynchronous_response` 加主執行緒事件佇列：轉接函式只把（視窗、事件編號、bind id）放入有互斥鎖的佇列，由 Harbour 主迴圈取出、執行處理函式，並在最後呼叫 `return_*`。在此模式下事件資料在 `return_*` 之前一直有效。
+3. **必須**採 `asynchronous_response` 加主執行緒事件佇列：轉接函式只把（視窗、事件編號、bind id）放入有互斥鎖的佇列，由 Harbour 主迴圈取出、執行處理函式，並在最後呼叫 `return_*`。在此模式下事件資料在 `return_*` 之前一直有效。 驗收只針對 bridge：ThreadSanitizer 回報過 1 筆競爭，位於 WebUI 的 civetweb，靜態庫未以 TSan 編譯，未追查；bridge 沒有任何回報。
 4. 回呼內不建議使用 `webui_script`（會阻塞回呼執行緒，`ui_event_blocking` 模式下還會讓其他事件排隊；逾時為 0 可能永久等待），無回傳值的呼叫改用 `webui_run`。
 5. `webui_clean` 在回呼內不會清理，只會要求結束。此處的「回呼」定義為綁定處理函式之內（bridge 的 `bridge_in_dispatch` 為真）。處理函式在 Harbour 主執行緒執行，因此本規則的意思是：`webui_clean` 只在處理函式之外執行，且須在 `webui_wait` 返回後再呼叫一次。
 6. `webui_set_event_blocking` 對視窗實際無效，改對應到 `webui_set_config(ui_event_blocking, ...)`。
@@ -73,7 +73,7 @@
 - **exit 之後：** `webui_free` 在 `webui_exit` 之後是空操作。encode 與 decode 的結果必須在 exit 之前釋放，否則只能由 `webui_clean` 回收。`webui_clean` 之後所有 WebUI 擁有的指標都失效。重新建立視窗的流程須在 W1 實測，不可假設。
 - **bridge 暫存：** 例如 `webui_script` 的緩衝區，用 `hb_xgrab` 取得，複製後 `hb_xfree`。輸入字串只在呼叫期間有效。若 WebUI 會保留指標（例如 `set_custom_parameters`），bridge 先複製並登記，再次設定或清理時釋放。W0 稽核結果：WebUI 只保留函式指標（`webui_bind`、`webui_interface_bind`），所有字串與緩衝區引數都被複製或只在呼叫期間使用。
 - **結束：** Harbour 在 `WEBUI_WAIT` 返回後呼叫 `WEBUI_CLEAN`，它呼叫 `webui_clean` 並釋放處理函式表。`webui_clean` 若在回呼內呼叫，只會要求結束，因此必須在 wait 之後呼叫（原始碼已確認）。
-- **單獨 exit 之後 clean：** 只呼叫 `webui_exit` 而未經 `webui_wait`，隨後呼叫 `webui_clean`，必須有測試。要求的行為由 Back-end 的 F1 修正決定，確定後補入本節。
+- **單獨 exit 之後 clean：** 只呼叫 `webui_exit` 而未經 `webui_wait`，隨後呼叫 `webui_clean`，必須有測試。決定的行為（F1 修正）：`webui_exit` 會初始化 WebUI，使 `new_window` 在 `webui_clean` 重設之前一律回傳 0，bridge 因此記錄 exit 狀態。exit 之後、clean 之前呼叫 `new_window`，引發 Harbour 執行期錯誤；clean 之後可以重新建立視窗。
 - **證明：**
   - valgrind 的 `--leak-check=full`。
   - 除錯版的配置與釋放計數器，結束後須為 0。
@@ -200,4 +200,4 @@ xvfb-run -a -s "-screen 0 1280x1024x24" ./abi_test --live
 | 1 | 2026-11-26 | `webui_get_hwnd`、`webui_win32_get_hwnd` 由排除改為範圍內（W4），以 `hb_retptr` 回傳、不釋放；排除 12 改 10，範圍內 100 改 102，W4 約 18 改約 20；Windows 真實 HWND 測試延後 | 依使用者提問修訂，2026-11-26 |
 | 2 | 2026-11-26 | 依 W0 稽核：範圍內 102、排除 10；各波函式數改為 12、27、27、25、11（合計 102）；新增 2.1 綁定設計規則；`bridge_i64.c` 為唯一 C99 檔，A7 相應調整；新增 7.1 W0 出口標準（ABI 測試 A 至 E）；記憶體規則補充 exit 之後與 WebUI 擁有字串的處理 | 依 Architect 稽核修訂，2026-11-26 |
 | 3 | 2026-11-26 | `webui_set_context`、`webui_get_context` 由排除改為範圍內（W2），以 bridge 槽位表實作；排除 10 改 8，範圍內 102 改 104；各波函式數為 12、29、27、25、11（合計 104）；併入 Architect 的 W0 結案審查：新增 `webui_script` 結果規則（規則 12）、`bool` 讀寫規則、C99 對照檢查具體化、A8 的 valgrind 與輔助證據、`folder_monitor` 延到 W5 觀察、E1 引數個數為 4 | 使用者核准，2026-11-26 |
-| 4 | 2026-11-26 | 解決 W1 QA 報告第 7 節的 10 項用語問題：規則 9 改為由 bridge 包裝函式檢查、違規引發 `EG_ARG`、補齊限制並按波列出測試；規則 3 改為「必須」；規則 5 定義「回呼」；規則 12 標為 W3；A4 腳本改稱 A4 ABI 檢查腳本；A10 要求 `a4-auto.sh`；A8 定義計數器；測試輔助函式不計入 104；新增單獨 exit 之後 clean 的測試要求。數量不變 | CEO 決定，2026-11-26 |
+| 4 | 2026-11-26 | 解決 W1 QA 報告第 7 節的 10 項用語問題：規則 9 改為由 bridge 包裝函式檢查、違規引發 `EG_ARG`、補齊限制並按波列出測試；規則 3 改為「必須」；規則 5 定義「回呼」；規則 12 標為 W3；A4 腳本改稱 A4 ABI 檢查腳本；A10 要求 `a4-auto.sh`；A8 定義計數器；測試輔助函式不計入 104；新增單獨 exit 之後 clean 的測試要求，並併入 F1 決定的行為（exit 之後、clean 之前 `new_window` 引發執行期錯誤，clean 之後可重建）與 TSan 結果（規則 3 驗收只針對 bridge）。數量不變 | CEO 決定，2026-11-26 |
