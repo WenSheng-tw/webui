@@ -56,6 +56,7 @@
 9. 呼叫端必須驗證範圍：`set_timeout` 0 至 60、`script` 逾時至多 86400、視窗大小 100 至 3840 乘 100 至 2160、位置 0 至 3000 乘 0 至 1800、引數索引至多 16。
 10. 凡會顯示、等待或執行 script 的呼叫，一律在 Harbour 主執行緒進行（Linux WebView 模式在呼叫執行緒上運行 GTK）。
 11. `webui_set_context` 與 `webui_get_context`（修訂 3 納入範圍，W2）以 bridge 內的槽位表實作：Harbour 值複製到 bridge 擁有的儲存空間，傳給 WebUI 的 `void*` 是槽位編號，不是位址；`get_context` 依槽位編號取回。同一個 window 與 element 重設時釋放舊槽位，`webui_clean` 時釋放全部槽位。`webui_set_context` 內部會呼叫 `webui_bind(window, element, NULL)`，會建立或改動綁定，必須有測試涵蓋此副作用。
+12. `webui_script` 的結果由回傳旗標加緩衝區共同表示：旗標為 true 時，緩衝區是結果；JavaScript 發生例外時，旗標為 false，緩衝區是錯誤文字；逾時時，緩衝區為空。Harbour 端須同時回傳兩者。
 
 ## 3. 記憶體回收
 
@@ -73,8 +74,8 @@
 - 不使用 `//`；宣告放在區塊開頭；不使用 `long long`；不 include 任何 C99 標頭。
 - 唯一例外是 `bridge_i64.c`：以 C99 撰寫，只放四個 64 位元整數函式（`get_int`、`get_int_at`、`interface_get_int_at`、`return_int`），不 include `webui.h`，自行宣告原型，並以 `-std=c99 -pedantic-errors` 編譯。其餘檔案維持 C89。
 - `webui.h` 與 `hbapi.h` 仍不 include，與 PoC-001 一致，因為兩者含 C99 語法。bridge 自行宣告所用子集。
-- `bool` 回傳宣告為 `unsigned char`。參數以 `int` 傳入。
-- 另做一次 C99 對照編譯，確認宣告與真實標頭沒有衝突。
+- `bool` 回傳宣告為 `unsigned char`，且絕不可當成 `int` 讀取。`bool` 參數在傳入前一律正規化為 `value ? 1 : 0`，以 `int` 傳入。
+- C99 對照檢查採 `abi_real.c`（引用真實標頭）加 A4 腳本，兩者須顯示 bridge 宣告與真實原型零差異。
 
 ## 5. 驗收
 
@@ -82,7 +83,7 @@
 |---|---|
 | A6 | 每個範圍內函式可由 Harbour 呼叫，並有對應測試 |
 | A7 | 除 `bridge_i64.c`（以 `-std=c99 -pedantic-errors` 驗證）外，所有 bridge 檔案通過 `gcc -std=c89 -pedantic-errors` |
-| A8 | 腳本化執行下 valgrind 的 definite leak 為 0，且計數器為 0 |
+| A8 | 腳本化執行下 valgrind（已安裝，3.22）為主要方法：bridge 與 WebUI 的 definite leak 為 0，且計數器為 0。dlopen 載入的 GTK 與 glib 洩漏另列，以抑制檔分開回報。輔助證據併用：LeakSanitizer、配置計數器、重複循環 |
 | A9 | 以 Linux 為準；Windows 依使用者決定延後 |
 | A10 | PoC-001 的 A1 至 A5 仍通過 |
 | A11 | 模式 1 內建通過全部函式測試 |
@@ -111,11 +112,11 @@
 | 波 | 內容 | 負責 | 函式數 | 必要測試 | 出口標準 |
 |---|---|---|---|---|---|
 | W0 | 前置：字串保留稽核、`bool` 與 64 位元 ABI 測試、`bridge_request.prg` 產生器與函式清單 | Architect、Back-end | 0 | ABI 測試通過（見 7.1） | 稽核表已完成；函式清單經 Architect 核可；ABI 測試通過 |
-| W1 | 基礎：雙模式測試執行器、md5 輔助、處理函式表、記憶體計數器、生命週期（new_window、bind、show、wait、wait_async、close、exit、clean、set_timeout、set_config）、get_string、return_string | Back-end，QA 驗 | 12 | 執行器自測、A13 四項雜湊規則、clean 後重建視窗 | A6 至 A8、A10 不退化、A11 至 A14 完整驗證 |
+| W1 | 基礎：雙模式測試執行器、md5 輔助、處理函式表、記憶體計數器、生命週期（new_window、bind、show、wait、wait_async、close、exit、clean、set_timeout、set_config）、get_string、return_string | Back-end，QA 驗 | 12 | 執行器自測、A13 四項雜湊規則、clean 後重建視窗；`folder_monitor` 的效果只在 W5 觀察 | A6 至 A8、A10 不退化、A11 至 A14 完整驗證 |
 | W2 | 事件與字串：get_count、get_*_at、return_int、return_float、return_bool、encode、decode、free、last_error、`interface_bind`、`interface_*` 取值與回應、is_app_running、get_window_id、set_context、get_context | Back-end，QA 驗 | 29 | 每函式一個測試；encode 與 decode 的釋放路徑；int64 檔；set_context 的 bind(NULL) 副作用、槽位重設與 clean 釋放 | A6 至 A8、A10、A11 至 A14 |
 | W3 | 顯示、瀏覽器、腳本：new_window_id、show 系列、start_server、get_url、open_url、run、script、send_raw、navigate、set_runtime、close_client 及其 client 與 interface 版 | Back-end，QA 驗 | 27 | 需 Xvfb 的整合測試；script 緩衝區釋放 | 同上 |
 | W4 | 視窗管理：size、position、kiosk、icon、focus、minimize、maximize、destroy、profile、proxy、set_event_blocking、get_hwnd、win32_get_hwnd 等 | Back-end，QA 驗 | 25 | 逐項呼叫並檢查回傳；`get_hwnd` 系列在 Linux 測無效視窗編號與非 WebView 模式回傳 NIL（真正的 HWND 延後到 Windows 驗證） | 同上 |
-| W5 | 資料夾、網路、其他：root_folder、default_root_folder、browser_folder、port、public、get_free_port、mime_type、TLS（被攔截並回傳 false）、行程編號 | Back-end，QA 驗 | 11 | 逐項測試；TLS 攔截不得使行程中止 | 同上，並做全量 valgrind |
+| W5 | 資料夾、網路、其他：root_folder、default_root_folder、browser_folder、port、public、get_free_port、mime_type、TLS（被攔截並回傳 false）、行程編號 | Back-end，QA 驗 | 11 | 逐項測試；TLS 攔截不得使行程中止；此波觀察 `folder_monitor` 的效果 | 同上，並做全量 valgrind |
 
 合計：12 + 29 + 27 + 25 + 11 = 104。
 
@@ -129,7 +130,7 @@
 | B | `bool` 回傳只用低位元組（反組譯檢查，僅供參考） |
 | C | `bool` 回傳與參數、列舉參數的實際執行（含暫存器污染對照），1000 次零不一致 |
 | D | `size_t` 與 `double` 往返、實際 ID 範圍、64 位元整數往返 |
-| E | Xvfb 加 Chrome 的實際回呼、`webui_script`、非同步回應 |
+| E | Xvfb 加 Chrome 的實際回呼（E1 預期引數個數為 4，已實測）、`webui_script`、非同步回應 |
 
 Linux 執行指令：
 
@@ -189,4 +190,4 @@ xvfb-run -a -s "-screen 0 1280x1024x24" ./abi_test --live
 | 0 | 2026-11-26 | 初版：完整 API 綁定、記憶體回收、分波計畫、雙模式測試 | 使用者核准，2026-11-26 |
 | 1 | 2026-11-26 | `webui_get_hwnd`、`webui_win32_get_hwnd` 由排除改為範圍內（W4），以 `hb_retptr` 回傳、不釋放；排除 12 改 10，範圍內 100 改 102，W4 約 18 改約 20；Windows 真實 HWND 測試延後 | 依使用者提問修訂，2026-11-26 |
 | 2 | 2026-11-26 | 依 W0 稽核：範圍內 102、排除 10；各波函式數改為 12、27、27、25、11（合計 102）；新增 2.1 綁定設計規則；`bridge_i64.c` 為唯一 C99 檔，A7 相應調整；新增 7.1 W0 出口標準（ABI 測試 A 至 E）；記憶體規則補充 exit 之後與 WebUI 擁有字串的處理 | 依 Architect 稽核修訂，2026-11-26 |
-| 3 | 2026-11-26 | `webui_set_context`、`webui_get_context` 由排除改為範圍內（W2），以 bridge 槽位表實作；排除 10 改 8，範圍內 102 改 104；各波函式數為 12、29、27、25、11（合計 104） | 使用者核准，2026-11-26 |
+| 3 | 2026-11-26 | `webui_set_context`、`webui_get_context` 由排除改為範圍內（W2），以 bridge 槽位表實作；排除 10 改 8，範圍內 102 改 104；各波函式數為 12、29、27、25、11（合計 104）；併入 Architect 的 W0 結案審查：新增 `webui_script` 結果規則（規則 12）、`bool` 讀寫規則、C99 對照檢查具體化、A8 的 valgrind 與輔助證據、`folder_monitor` 延到 W5 觀察、E1 引數個數為 4 | 使用者核准，2026-11-26 |
