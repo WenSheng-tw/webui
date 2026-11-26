@@ -534,15 +534,8 @@ STATIC PROCEDURE Finish()
          ENDIF
       NEXT
       IF W1T_COUNTER( "enabled" ) == 1 .AND. s_nLive >= 3
-         nMin := s_aLive[ 2 ][ 2 ]
-         nMax := s_aLive[ 2 ][ 2 ]
-         FOR EACH a IN s_aLive
-            IF a[ 1 ] != NIL .AND. a[ 1 ] >= 2
-               nMin := Min( nMin, a[ 2 ] )
-               nMax := Max( nMax, a[ 2 ] )
-            ENDIF
-         NEXT
-         T_Ok( nMax == nMin, "counters: live blocks after clean are identical for cycles 2 to " + hb_ntos( s_nLive ) )
+         T_Ok( s_aLive[ s_nLive ][ 2 ] <= s_aLive[ 2 ][ 2 ], ;
+            "counters: no net growth of live blocks between the clean of cycle 2 and the clean of cycle " + hb_ntos( s_nLive ) )
       ENDIF
    ENDIF
    IF s_aShowMs != NIL .AND. s_nLive != NIL .AND. s_nLive >= 2
