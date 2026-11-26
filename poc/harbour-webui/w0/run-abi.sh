@@ -8,7 +8,7 @@
 cd "$(dirname "$0")" || exit 2
 HERE=$(pwd)
 REPO=$(cd ../../.. && pwd)
-VARIANTS=${VARIANTS:-"O0 O2 asan"}
+VARIANTS=${VARIANTS:-"O0 O2 asan cnt"}
 mkdir -p build
 FAIL=0
 

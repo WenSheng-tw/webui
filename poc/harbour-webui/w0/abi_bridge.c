@@ -79,6 +79,9 @@ extern void abi_i64_get_int_at_decimal(void *e, size_t index, char *dec, size_t 
 extern void abi_i64_get_int_decimal(void *e, char *dec, size_t decsize);
 extern void abi_i64_interface_get_int_at_decimal(size_t window, size_t event_number, size_t index, char *dec, size_t decsize);
 extern size_t abi_i64_sizeof_long_long(void);
+extern int abi_counters_enabled(void);
+extern void abi_counters_get(unsigned long *allocs, unsigned long *frees, unsigned long *live_blocks,
+                             unsigned long *live_bytes, unsigned long *foreign_frees, unsigned long *table_full);
 extern void abi_i64_limits(char *min, char *max, size_t size);
 
 /* TAP */
@@ -204,6 +207,8 @@ struct c1_case
     int iterations;
 };
 
+static int g_iter_cap = 0;
+
 static unsigned long call_direct(const struct c1_case *c)
 {
     switch (c->kind)
@@ -261,6 +266,7 @@ static unsigned long call_dirty(const struct c1_case *c)
 static void run_c1(const struct c1_case *c)
 {
     int i;
+    int iterations;
     int mismatch = 0;
     int out_of_range = 0;
     int dirty_upper = 0;
@@ -269,7 +275,8 @@ static void run_c1(const struct c1_case *c)
     unsigned long r;
     unsigned long x;
 
-    for (i = 0; i < c->iterations; i++)
+    iterations = (g_iter_cap > 0 && g_iter_cap < c->iterations) ? g_iter_cap : c->iterations;
+    for (i = 0; i < iterations; i++)
     {
         d = call_direct(c);
         r = call_real(c);
@@ -298,7 +305,7 @@ static void run_c1(const struct c1_case *c)
             }
         }
     }
-    sprintf(g_msg, "C1 %s -> %d: %d iterations, %d mismatches, %d outside {0,1}", c->name, c->expect, c->iterations, mismatch, out_of_range);
+    sprintf(g_msg, "C1 %s -> %d: %d iterations, %d mismatches, %d outside {0,1}", c->name, c->expect, iterations, mismatch, out_of_range);
     tap(mismatch == 0 && out_of_range == 0, g_msg);
     sprintf(g_msg, "C1 %s negative control: upper bytes of rax left dirty %d times, reading the result as int would be wrong %d times",
             c->name, dirty_upper, int_read_wrong);
@@ -1156,6 +1163,36 @@ static void group_e(const char *dir)
     webui_close(w);
 }
 
+/* Allocation counters (cnt variant only): everything WebUI and the test allocated must be freed. */
+static void report_counters(void)
+{
+    unsigned long allocs, frees, live, bytes, foreign, full;
+
+    if (!abi_counters_enabled())
+    {
+        tap_info("counters: allocation counting is not enabled in this build (variant cnt only)");
+        return;
+    }
+    {
+        unsigned long l0, l1, l2;
+        void *probe;
+        void *(*volatile alloc_fn)(size_t) = malloc;
+        void (*volatile free_fn)(void *) = free;
+
+        abi_counters_get(&allocs, &frees, &l0, &bytes, &foreign, &full);
+        probe = alloc_fn(77);
+        abi_counters_get(&allocs, &frees, &l1, &bytes, &foreign, &full);
+        free_fn(probe);
+        abi_counters_get(&allocs, &frees, &l2, &bytes, &foreign, &full);
+        sprintf(g_msg, "counters control: a deliberately held 77-byte block raises live blocks from %lu to %lu and freeing it returns to %lu", l0, l1, l2);
+        tap(l1 == l0 + 1 && l2 == l0, g_msg);
+    }
+    abi_counters_get(&allocs, &frees, &live, &bytes, &foreign, &full);
+    sprintf(g_msg, "counters after webui_clean: %lu allocations, %lu frees, %lu live blocks (%lu bytes), %lu foreign frees, %lu table overflows",
+            allocs, frees, live, bytes, foreign, full);
+    tap(allocs > 0 && live == 0 && bytes == 0 && full == 0, g_msg);
+}
+
 /* ------------------------------------------------------------------ main */
 
 int main(int argc, char **argv)
@@ -1174,13 +1211,17 @@ int main(int argc, char **argv)
         {
             live = 0;
         }
+        else if (strcmp(argv[i], "--iterations") == 0 && i + 1 < argc)
+        {
+            g_iter_cap = atoi(argv[++i]);
+        }
         else if (strcmp(argv[i], "--dir") == 0 && i + 1 < argc)
         {
             dir = argv[++i];
         }
         else
         {
-            fprintf(stderr, "usage: %s [--headless | --live --dir <w0 dir>]\n", argv[0]);
+            fprintf(stderr, "usage: %s [--headless [--iterations N] | --live --dir <w0 dir>]\n", argv[0]);
             return 2;
         }
     }
@@ -1204,6 +1245,7 @@ int main(int argc, char **argv)
     }
     webui_exit();
     webui_clean();
+    report_counters();
     printf("1..%d\n", g_n);
     if (g_bad)
     {
