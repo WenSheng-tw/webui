@@ -17,6 +17,7 @@ typedef struct webui_event_t webui_event_t;
 extern size_t webui_new_window(void);
 extern size_t webui_bind(size_t window, const char *element, void (*func)(webui_event_t *e));
 extern void webui_show(size_t window, const char *content);
+extern void webui_set_config(int option, int status);
 extern void webui_wait(void);
 extern const char *webui_get_string(webui_event_t *e);
 extern void webui_return_string(webui_event_t *e, const char *s);
@@ -34,6 +35,9 @@ extern const char *hb_parc(int iParam);
 extern void hb_retni(int iNumber);
 
 #define BRIDGE_HANDLER_MAX 64
+
+/* webui_config value ui_event_blocking in include/webui.h */
+#define BRIDGE_CFG_UI_EVENT_BLOCKING 1
 
 /* PoC-001 binds a single Harbour handler. */
 static char s_szHandler[BRIDGE_HANDLER_MAX];
@@ -109,6 +113,14 @@ void HB_FUN_WEBUI_BINDHB(void)
         s_szHandler[i] = (char) toupper((unsigned char) pszHandler[i]);
     }
     s_szHandler[nLen] = '\0';
+
+    /*
+     * WebUI runs every callback in a new thread by default, but the Harbour
+     * VM has a single global stack. Serialize the callbacks. This must be the
+     * global option, not webui_set_event_blocking(), which only sets a
+     * per-window flag that the receive path does not check.
+     */
+    webui_set_config(BRIDGE_CFG_UI_EVENT_BLOCKING, 1);
 
     hb_retni((int) webui_bind((size_t) hb_parni(1), pszJsName, OnBoundCall));
 }
