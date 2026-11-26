@@ -10,7 +10,9 @@ poc/harbour-webui/
 │   ├── main.prg     主程式：建立視窗、綁定 hello、顯示頁面、等待關閉
 │   └── hello.prg    Hello(cName)：回傳問候字串並計數
 ├── src/
-│   └── bridge.c     C89 膠合層：WebUI <-> Harbour
+│   ├── bridge.c     PoC-001 相容名稱（WEBUI_NEWWINDOW、WEBUI_BINDHB）
+│   ├── bridge_core.c / bridge_win.c / bridge_event.c   PoC-002 W1 之後的 C89 膠合層
+│   └── bridge_*.h   宣告與常數（見 w1/W1-REPORT.md）
 ├── ui/
 │   └── index.html   介面（輸入框、按鈕、結果）
 └── README.md
@@ -44,10 +46,10 @@ make                                   # 產出 dist/libwebui-2-static.a
 
 # 2. 檢查 bridge 的 C89 合規性
 cd poc/harbour-webui
-gcc -std=c89 -pedantic-errors -Wall -Wextra -c src/bridge.c -o /tmp/bridge.o
+w1/check-c89.sh                        # 對 src/*.c 逐一以 -std=c89 -pedantic-errors -Wall -Wextra 編譯
 
 # 3. 建置 PoC
-hbmk2 prg/main.prg prg/hello.prg src/bridge.c \
+hbmk2 prg/main.prg prg/hello.prg src/bridge_core.c src/bridge_win.c src/bridge_event.c src/bridge.c \
   -I../../include -L../../dist -lwebui-2-static -lpthread -lm -ldl \
   -ohbwebui
 
@@ -140,6 +142,6 @@ vs2019-x32 的 `hbmk2.exe` 問題已由使用者確認解決。若重新出現�
 
 ## 已知限制
 
-- PoC 只支援單一綁定函式（`bridge.c` 中的 `s_szHandler`）。
+- 自 PoC-002 W1 起，bridge 支援多個綁定函式（以 bind id 查表），Harbour 處理函式在主執行緒執行；Windows 的建置指令與 `scripts\*.bat` 仍只列出 `src\bridge.c`，需補上 `src\bridge_core.c src\bridge_win.c src\bridge_event.c`（尚未在 Windows 驗證）。
 - 處理函式在 WebUI 執行緒中呼叫 Harbour VM。Linux 驗證無問題，但 Windows 上尚未驗證，也未確認 Harbour 是否為多執行緒建置。若出現異常，改為由主執行緒處理佇列。
 - 頁面需從 PoC 所在的資料夾下啟動，才能讀到 `ui/index.html`。
