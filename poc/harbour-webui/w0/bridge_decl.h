@@ -5,7 +5,7 @@
  * their low byte only; bool and enum parameters are int; ids, sizes and browser/runtime
  * values are size_t; webui_event_t stays opaque here. The four long long functions are
  * not declared here, they live in the C99 unit (abi_i64.c now, bridge_i64.c in W1).
- * The ten excluded functions are not declared at all.
+ * The eight excluded functions are not declared at all.
  *
  * w0/check_protos.py diffs this file and abi_i64.c against include/webui.h.
  */
@@ -24,6 +24,8 @@ extern size_t webui_new_window(void);
 extern size_t webui_new_window_id(size_t window_number);
 extern size_t webui_get_new_window_id(void);
 extern size_t webui_bind(size_t window, const char *element, void (*func)(webui_event_t *e));
+extern void webui_set_context(size_t window, const char *element, void *context);
+extern void *webui_get_context(webui_event_t *e);
 extern size_t webui_get_best_browser(size_t window);
 extern ubool webui_show(size_t window, const char *content);
 extern ubool webui_show_client(webui_event_t *e, const char *content);

@@ -2,6 +2,8 @@
 # Source of truth for wave assignment: docs/team/POC-SPEC-002.md revision 2 (section 1, 7)
 # and docs/team/AUDIT-POC002-W0.md (table 1). webui_get_hwnd and webui_win32_get_hwnd are
 # W4 per spec revision 1 and 2 (the audit table still lists them as OUT).
+# webui_set_context and webui_get_context are W2 per CEO decision (user approved): in scope 104,
+# excluded 8 (webui_malloc, webui_memcpy and six callback/response-handler functions).
 # wave: W1..W5 = in scope, EXCLUDED = not bound. area: audit table column (e).
 # Order follows include/webui.h. Checked by gen_functions.py.
 name,wave,area
@@ -9,8 +11,8 @@ webui_new_window,W1,window
 webui_new_window_id,W3,window
 webui_get_new_window_id,W3,window
 webui_bind,W1,bind/script
-webui_set_context,EXCLUDED,excluded
-webui_get_context,EXCLUDED,excluded
+webui_set_context,W2,strings/returns
+webui_get_context,W2,strings/returns
 webui_get_best_browser,W3,show
 webui_show,W1,show
 webui_show_client,W3,show

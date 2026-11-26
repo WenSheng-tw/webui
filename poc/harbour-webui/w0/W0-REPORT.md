@@ -14,9 +14,9 @@
 | C bool 與列舉 | 通過（含暫存器污染對照，各案例 1000 次零不一致） |
 | D 數值往返 | 通過（D1、D2、D3 含實際 10000 個事件） |
 | E 實際回呼 | 通過（Xvfb 加 Chrome，兩種最佳化與 ASan 各一次） |
-| 函式清單 | 完成，112 筆，12 / 27 / 27 / 25 / 11 / 排除 10，範圍內合計 102 |
+| 函式清單 | 完成，112 筆，12 / 29 / 27 / 25 / 11 / 排除 8，範圍內合計 104（修訂：CEO 決定 `webui_set_context`、`webui_get_context` 納入 W2） |
 
-W0 出口標準第一項（ABI 測試 A 至 E）在本機 Linux x86-64 通過。未發現會阻擋 W1 的 ABI 失敗。有 3 項稽核與實測不一致或稽核未涵蓋的發現，見第 5 節。
+W0 出口標準第一項（ABI 測試 A 至 E）在本機 Linux x86-64 通過。未發現會阻擋 W1 的 ABI 失敗。有數項稽核與實測不一致或稽核未涵蓋的發現，見第 5 節。
 
 ## 2. 環境
 
@@ -71,7 +71,7 @@ asan-live     rc=0  ok=32  not_ok=0
 | A1 | 真實標頭：`sizeof(bool)=1`、`webui_config=4`（等於 int）、`size_t=void*=8`、`long long=8` | 通過；C99 單元用負陣列大小做編譯期斷言，C89 單元做同類斷言並於執行期比對 |
 | A2 | 鏡像 `webui_event_t` 與真實版：大小 64，8 個欄位偏移 | 通過，0 不一致。變異測試：把鏡像的 `client_id` 與 `connection_id` 對調，A2 回報 2 個不一致（偏移 40 與 48），確認檢查有效 |
 | A3 | 32 個列舉值（config 6、browser 14、runtime 4、event 5、logger 3）：`bridge_consts.h` 的手寫巨集對真實標頭 | 通過。`check_protos.py` 做文字漂移檢查（缺、多、值不同皆失敗），`abi_real.c` 用 `abi_enums_gen.h`（由標頭產生）逐一比對執行期數值 |
-| A4 | 112 個 `WEBUI_EXPORT` 原型全部由腳本分類與比對 | 通過：102 個範圍內與 `bridge_decl.h`（98 個）加 `abi_i64.c`（4 個，`long long`）零差異、零缺漏、零多餘；10 個排除函式皆未宣告 |
+| A4 | 112 個 `WEBUI_EXPORT` 原型全部由腳本分類與比對 | 通過：104 個範圍內與 `bridge_decl.h`（100 個）加 `abi_i64.c`（4 個，`long long`）零差異、零缺漏、零多餘；8 個排除函式皆未宣告（`set_context`、`get_context` 改列範圍內後於 `bridge_decl.h` 補宣告並重跑 A4） |
 
 A4 的正規化規則：回傳 `bool` 變 `ubool`，參數 `bool` 與 `webui_config` 變 `int`，`long long int` 變 `long long`，丟棄參數名稱，`()` 視為 `(void)`。腳本內建 3 個負向對照（把 bool 參數宣告成 `ubool`、刪掉一個宣告並多宣告一個排除函式、把 `unsigned int` 放寬為 `size_t`），都被偵測到。
 
@@ -120,11 +120,12 @@ A4 的正規化規則：回傳 `bool` 變 `ubool`，參數 `bool` 與 `webui_con
 | F1 | 稽核 E1 預期 `get_count`=5，實際為 4。`webui.call` 的第一個參數是函式名，不算引數；JS 傳的是 123、'x'、true、1.5 共 4 個 | `results/O2-live.tap` 第 14 項 | 稽核表筆誤，以 4 為準 |
 | F2 | `webui_script` 在 JS 例外時回傳假，但緩衝區內是錯誤文字（本例為 `abi`），不是空的。稽核只說「回傳假」。逾時則緩衝區保持零 | `O2-live.tap` 第 9、10 項；`src/webui.c` 的 `webui_script_client` 回傳 `!js_error` | W3 的 `WEBUI_SCRIPT` 在回傳假時不得把緩衝區當成結果，若要回傳錯誤文字須明確標示 |
 | F3 | 在目前二進位上沒有觀察到 bool 回傳的高位元組被污染（0 次），但 B 顯示 18 個出口可能留下未定義的高位元組 | `O2-headless.tap` 的負向對照與 `bool-objdump.tap` | 維持 `ubool` 只讀低位元組的規則，不可因為測不到污染而改回 `int` |
-| F4 | 稽核表仍把 `webui_get_hwnd` 與 `webui_win32_get_hwnd` 列為排除，W4 為 23、範圍內為 100。依規格修訂 1 與 2，函式清單已改為 W4=25、範圍內 102、排除 10 | `functions.txt`、`gen_functions.py` | 請 Architect 更新稽核表（本次未改稽核文件） |
+| F4 | 稽核表仍把 `webui_get_hwnd` 與 `webui_win32_get_hwnd` 列為排除，W4 為 23、範圍內為 100。依規格修訂 1 與 2，函式清單已改為 W4=25（本項之後又因 CEO 決定改為範圍內 104、排除 8，W2=29） | `functions.txt`、`gen_functions.py` | 請 Architect 更新稽核表（本次未改稽核文件） |
 | F5 | 規格 4 的「C99 對照編譯確認宣告與真實標頭沒有衝突」無法在同一個翻譯單元內做，因為 `ubool`（unsigned char）與真實 `bool` 的宣告本來就衝突，`webui_event_t` 也重複 | — | 改為：`abi_real.c` 以真實標頭編譯（C99），加上 A4 腳本比對；若規格要字面的對照編譯，需要改規格 |
 | F6 | 執行時間：O2 變體的無頭測試約 95 秒，主要是 `set_port` 與 `browser_exist(Chrome)` 各 3000 次呼叫；完整矩陣約 4 分 48 秒 | `run-abi.sh` 的 `time` 輸出 | 若 CI 嫌慢，可把這兩個案例降到 300 次，需先改規格的 1000 次要求 |
 | F7 | asan 變體沒有洩漏報告。LeakSanitizer 在本機有效（已用小程式確認），但只涵蓋這個測試流程，且函式庫本身未插樁。這不能取代 A8 的 valgrind | `asan-headless.tap`、`asan-live.tap`、空的 `.err` | W1 起仍需 valgrind；本機沒有 |
 | F8 | `client_id` 與 `connection_id` 在單一客戶端模式恆為 0，稽核寫「小於 65535」仍成立但不具檢驗力 | `O2-live.tap` 第 18、25 項 | 多客戶端情境在 W3 才有意義 |
+| F9 | CEO 決定（使用者核准）`webui_set_context`、`webui_get_context` 改為範圍內 W2：W2=29、範圍內 104、排除 8（只剩 `webui_malloc`、`webui_memcpy` 與六個回呼或回應處理函式）。校驗器要求範圍內合計必須為 104。`webui_interface_get_context` 在 `include/webui.h` 中不存在（112 個原型沒有此名稱），因此函式清單沒有對應項目 | `functions.txt`、`results/functions.tap`、`results/protos.tap` | 若指的是別的名稱，請 CEO 確認 |
 
 函式庫行為與稽核一致處：`set_root_folder`、`set_port`、`set_public`、`encode`、`decode`、`new_window_id`、`multi_client` 下 `script` 回假、`ui_event_blocking`、`asynchronous_response` 的資料有效期，皆符合稽核。
 
@@ -132,7 +133,7 @@ A4 的正規化規則：回傳 `bool` 變 `ubool`，參數 `bool` 與 `webui_con
 
 - 32 位元（`-m32`）：沒有 multilib，連結 `-m32` 時缺 `Scrt1.o`、`crti.o`，Win32 與 x32 重跑延後
 - `ss`：不存在，改以讀取 `/proc/net/tcp` 與 `/proc/net/tcp6` 判斷監聽位址
-- `hbmk2` 與 `harbour`：不存在，`bridge_request.prg` 只驗證了產生器輸出的行數（102 行 `REQUEST`）與命名規則，未經 Harbour 編譯，`.hrb` 解析檢查（規格 8.3）尚未做
+- `hbmk2` 與 `harbour`：不存在，`bridge_request.prg` 只驗證了產生器輸出的行數（104 行 `REQUEST`）與命名規則，未經 Harbour 編譯，`.hrb` 解析檢查（規格 8.3）尚未做
 - `valgrind`：不存在，A8 的 valgrind 部分尚未做
 - Windows 與 WebView 模式：未測
 - clang：沒有跑矩陣（只有 gcc 13.3）
@@ -142,8 +143,8 @@ A4 的正規化規則：回傳 `bool` 變 `ubool`，參數 `bool` 與 `webui_con
 | 檔案 | 用途 |
 |---|---|
 | `functions.txt` | 112 筆函式清單：名稱、波次、領域，依標頭順序 |
-| `gen_functions.py` | 檢查清單（標頭每個函式恰好一次、各波數量 12/27/27/25/11/10、範圍內合計 102、排除與 W1 名單等於規格）並產生 `bridge_request.prg`（`--request`）、列出波次名單（`--names`） |
-| `bridge_request.prg` | 產生的 102 行 `REQUEST WEBUI_*`（名稱為 C 名稱大寫，例如 `WEBUI_NEW_WINDOW`）；舊的 PoC-001 名稱 `WEBUI_NEWWINDOW`、`WEBUI_BINDHB` 未納入，W1 決定 |
+| `gen_functions.py` | 檢查清單（標頭每個函式恰好一次、各波數量 12/29/27/25/11/8、範圍內合計 104、排除名單為 `webui_malloc` 等 8 個、W1 名單等於規格）並產生 `bridge_request.prg`（`--request`）、列出波次名單（`--names`） |
+| `bridge_request.prg` | 產生的 104 行 `REQUEST WEBUI_*`（名稱為 C 名稱大寫，例如 `WEBUI_NEW_WINDOW`）；舊的 PoC-001 名稱 `WEBUI_NEWWINDOW`、`WEBUI_BINDHB` 未納入，W1 決定 |
 | `hdrparse.py`、`check_protos.py` | 標頭剖析、A3 漂移檢查、A4 原型比對、產生 `abi_enums_gen.h` |
 | `check_bool_abi.py` | B 組 |
 | `bridge_decl.h`、`bridge_consts.h`、`bridge_num.h` | 手寫的 C89 宣告、列舉常數、`double` 與 `size_t` 轉換輔助，W1 的 bridge 可直接採用 |

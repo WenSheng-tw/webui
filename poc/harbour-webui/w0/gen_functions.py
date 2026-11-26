@@ -16,13 +16,13 @@ import sys
 import hdrparse
 
 EXPECTED = collections.OrderedDict(
-    [("W1", 12), ("W2", 27), ("W3", 27), ("W4", 25), ("W5", 11), ("EXCLUDED", 10)]
+    [("W1", 12), ("W2", 29), ("W3", 27), ("W4", 25), ("W5", 11), ("EXCLUDED", 8)]
 )
-IN_SCOPE_TOTAL = 102
+IN_SCOPE_TOTAL = 104
 HEADER_TOTAL = 112
 
 SPEC_EXCLUDED = frozenset(
-    """webui_set_context webui_get_context webui_malloc webui_memcpy
+    """webui_malloc webui_memcpy
     webui_set_logger webui_set_close_handler_wv webui_set_file_handler
     webui_set_file_handler_window webui_return_http
     webui_interface_set_response_file_handler""".split()
@@ -77,12 +77,14 @@ def check():
     tap.ok(in_scope == IN_SCOPE_TOTAL, "in-scope waves sum to %d (got %d)" % (IN_SCOPE_TOTAL, in_scope))
 
     excl = frozenset(r[0] for r in rows if r[1] == "EXCLUDED")
-    tap.ok(excl == SPEC_EXCLUDED, "EXCLUDED set equals the 10 names of spec section 1",
+    tap.ok(excl == SPEC_EXCLUDED, "EXCLUDED set equals the 8 names (spec section 1 minus set_context and get_context, CEO decision)",
            ["unexpected: %s" % sorted(excl - SPEC_EXCLUDED), "absent: %s" % sorted(SPEC_EXCLUDED - excl)])
     w1 = frozenset(r[0] for r in rows if r[1] == "W1")
     tap.ok(w1 == SPEC_W1, "W1 set equals the 12 names of spec section 7",
            ["unexpected: %s" % sorted(w1 - SPEC_W1), "absent: %s" % sorted(SPEC_W1 - w1)])
     hw = {r[0]: r[1] for r in rows if "hwnd" in r[0]}
+    ctx = {r[0]: r[1] for r in rows if r[0].endswith("_context")}
+    tap.ok(ctx == {"webui_set_context": "W2", "webui_get_context": "W2"}, "set_context and get_context are W2 (CEO decision)")
     tap.ok(hw == {"webui_get_hwnd": "W4", "webui_win32_get_hwnd": "W4"}, "get_hwnd functions are W4 (spec rev 1)")
     tap.ok(names == hdr, "list order follows the header order")
     return tap, rows
