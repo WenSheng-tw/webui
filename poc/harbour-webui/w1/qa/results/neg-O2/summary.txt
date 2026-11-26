@@ -1,0 +1,9 @@
+ok: case timeout (40 ok, 0 not ok, exit 0)
+ok: case config (56 ok, 0 not ok, exit 0)
+ok: case window (114 ok, 0 not ok, exit 0)
+ok: case bind (35 ok, 0 not ok, exit 0)
+ok: case show (15 ok, 0 not ok, exit 0)
+ok: case state (50 ok, 0 not ok, exit 0)
+ok: case table (5 ok, 0 not ok, exit 0)
+FINDING F1 (open, not counted): new_window returns 0 after a lone exit + clean, see build/O2/finding_exit_first.tap
+== O2: 315 ok in total, PASSED

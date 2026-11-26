@@ -1,0 +1,66 @@
+TAP version 13
+# qa_neg case state, Harbour 3.2.0 (r2607071000)
+# get_string outside a handler raises: WEBUI_GET_STRING is valid only inside a bound handler
+ok 1 - get_string outside a handler raises
+# return_string outside a handler raises: WEBUI_RETURN_STRING is valid only inside a bound handler
+ok 2 - return_string outside a handler raises
+# return_string(NaN) outside a handler raises: WEBUI_RETURN_STRING is valid only inside a bound handler
+ok 3 - return_string(NaN) outside a handler raises
+ok 4 - wait_async before any window is .F.
+ok 5 - wait before any window returns
+ok 6 - cycle 1: new_window after clean
+# cycle 1: hostile set_timeout between lifecycle calls: timeout: not an integer between 0 and 2^53
+ok 7 - cycle 1: hostile set_timeout between lifecycle calls
+# cycle 1: hostile bind between lifecycle calls: window id: out of range 1..65535
+ok 8 - cycle 1: hostile bind between lifecycle calls
+ok 9 - cycle 1: valid bind
+ok 10 - cycle 1: close of a never shown window
+ok 11 - cycle 1: exit
+ok 12 - cycle 1: clean
+ok 13 - cycle 1: no bridge memory left
+ok 14 - cycle 2: new_window after clean
+# cycle 2: hostile set_timeout between lifecycle calls: timeout: not an integer between 0 and 2^53
+ok 15 - cycle 2: hostile set_timeout between lifecycle calls
+# cycle 2: hostile bind between lifecycle calls: window id: out of range 1..65535
+ok 16 - cycle 2: hostile bind between lifecycle calls
+ok 17 - cycle 2: valid bind
+ok 18 - cycle 2: close of a never shown window
+ok 19 - cycle 2: exit
+ok 20 - cycle 2: clean
+ok 21 - cycle 2: no bridge memory left
+ok 22 - cycle 3: new_window after clean
+# cycle 3: hostile set_timeout between lifecycle calls: timeout: not an integer between 0 and 2^53
+ok 23 - cycle 3: hostile set_timeout between lifecycle calls
+# cycle 3: hostile bind between lifecycle calls: window id: out of range 1..65535
+ok 24 - cycle 3: hostile bind between lifecycle calls
+ok 25 - cycle 3: valid bind
+ok 26 - cycle 3: close of a never shown window
+ok 27 - cycle 3: exit
+ok 28 - cycle 3: clean
+ok 29 - cycle 3: no bridge memory left
+ok 30 - cycle 4: new_window after clean
+# cycle 4: hostile set_timeout between lifecycle calls: timeout: not an integer between 0 and 2^53
+ok 31 - cycle 4: hostile set_timeout between lifecycle calls
+# cycle 4: hostile bind between lifecycle calls: window id: out of range 1..65535
+ok 32 - cycle 4: hostile bind between lifecycle calls
+ok 33 - cycle 4: valid bind
+ok 34 - cycle 4: close of a never shown window
+ok 35 - cycle 4: exit
+ok 36 - cycle 4: clean
+ok 37 - cycle 4: no bridge memory left
+ok 38 - cycle 5: new_window after clean
+# cycle 5: hostile set_timeout between lifecycle calls: timeout: not an integer between 0 and 2^53
+ok 39 - cycle 5: hostile set_timeout between lifecycle calls
+# cycle 5: hostile bind between lifecycle calls: window id: out of range 1..65535
+ok 40 - cycle 5: hostile bind between lifecycle calls
+ok 41 - cycle 5: valid bind
+ok 42 - cycle 5: close of a never shown window
+ok 43 - cycle 5: exit
+ok 44 - cycle 5: clean
+ok 45 - cycle 5: no bridge memory left
+ok 46 - clean with nothing to clean is a no-op
+ok 47 - exit without any window does not crash
+ok 48 - exit twice does not crash
+ok 49 - clean after a lone exit does not crash
+ok 50 - case state reached its end without a crash
+1..50

@@ -1,0 +1,16 @@
+TAP version 13
+1..14
+ok 1 - A3 header enums are exactly webui_browser, webui_config, webui_event, webui_logger_level, webui_runtime
+ok 2 - A3 all 32 enumerators match bridge_consts.h (wrong 0, missing 0, extra 0)
+ok 3 - A4 no function declared in both bridge_decl.h and abi_i64.c
+ok 4 - A4 abi_i64.c declares exactly the four long long functions
+ok 5 - A4 header has 112 prototypes (got 112)
+ok 6 - A4 104 in-scope prototypes: zero signature diffs (got 0)
+ok 7 - A4 zero in-scope prototypes missing from the bridge (got 0)
+ok 8 - A4 zero extra declarations not in the header (got 0)
+ok 9 - A4 none of the 8 excluded functions is declared (got 0)
+ok 10 - A4 112 = 104 compared + 8 excluded, bridge declares 104
+ok 11 - A4 every header prototype using long long is in abi_i64.c only
+ok 12 - A4 control: a bool parameter declared ubool instead of int is reported
+ok 13 - A4 control: a missing and a forbidden declaration are reported
+ok 14 - A4 control: a widened unsigned int parameter is reported

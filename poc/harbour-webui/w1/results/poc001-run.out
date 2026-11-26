@@ -1,0 +1,5 @@
+ok - A1 bridge files pass -std=c89 -pedantic-errors -Wall -Wextra
+ok - A2 build and link
+ok - A3 program is running with its window (see a3-open.png)
+# A4: check w1/build/results/poc001/a4-call3.png shows 'Harbour says: Hello, World! (call #3)'
+ok - A5 program ended with exit code 0 about 3 s after closing the window

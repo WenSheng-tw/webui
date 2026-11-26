@@ -1,0 +1,31 @@
+TAP version 13
+# mode 1 (linked), suite all, Harbour 3.2.0 (r2607071000)
+ok 1 - A13 self: neither prg nor hrb gives missing
+ok 2 - A13 self: no hrb compiles
+ok 3 - A13 self: hrb and sidecar exist after compile
+ok 4 - A13 self: sidecar line 1 is md5 of the prg, line 2 is hb_Version()
+ok 5 - A13 self: md5 is 32 lowercase hex characters
+ok 6 - A13 self: compiled hrb runs and returns 41
+ok 7 - A13 self: identical hash skips the compile
+ok 8 - A13 self: reuse really kept the existing hrb (replacement still runs)
+ok 9 - A13 self: changed prg recompiles
+ok 10 - A13 self: recompiled hrb returns 42
+ok 11 - A13 self: sidecar updated to the new hash
+ok 12 - A13 self: any byte change of the prg recompiles
+ok 13 - A13 self: wrong hash and version in sidecar recompiles
+ok 14 - A13 self: right hash but other Harbour version recompiles
+ok 15 - A13 self: missing sidecar recompiles
+ok 16 - A13 self: sidecar written again, next call reuses
+/tmp/w1st_55570312/st.prg(1) Error E0020  Incomplete statement or unbalanced delimiters
+/tmp/w1st_55570312/st.prg(2) Warning W0005  RETURN statement with no return value in function
+1 error
+
+No code generated.
+ok 17 - A13 self: syntax error gives error
+ok 18 - A13 self: failed compile leaves hrb and sidecar untouched
+ok 19 - A13 self: missing prg uses the hrb
+ok 20 - A13 self: hrb-only run returns the old value 42
+ok 21 - A13 self: hrb-only leaves the sidecar alone
+ok 22 - A13 self: prg and hrb both gone gives missing
+ok 23 - A13 self: temporary folder removed
+1..23

@@ -1,0 +1,31 @@
+# Valgrind suppressions for the PoC-002 W0 ABI test.
+#
+# WebUI loads GTK and WebKit with dlopen() the first time a window property needs them
+# (_webui_load_gtk_and_webkit, reached from webui_new_window and webui_set_center even in
+# browser mode). The allocations below are made by the constructors of those libraries
+# (glib, gobject, gtk, atk, ...) while dlopen runs _dl_init. They are not allocated by
+# WebUI or by the bridge and are never freed by anyone. Every frame list below requires
+# _dl_init below dlopen below _webui_load_gtk_and_webkit, so a leak allocated by WebUI
+# code or by the test itself can never match.
+
+{
+   dlopen-gtk-glib-constructor-definite
+   Memcheck:Leak
+   match-leak-kinds: definite,indirect,possible
+   ...
+   fun:_dl_init
+   ...
+   fun:dlopen*
+   fun:_webui_load_gtk_and_webkit
+}
+
+{
+   dlopen-gtk-glib-constructor-reachable
+   Memcheck:Leak
+   match-leak-kinds: reachable
+   ...
+   fun:_dl_init
+   ...
+   fun:dlopen*
+   fun:_webui_load_gtk_and_webkit
+}

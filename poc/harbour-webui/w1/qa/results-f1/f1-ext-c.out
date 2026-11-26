@@ -1,0 +1,11 @@
+
+new_window nonzero .T.
+exit NIL
+clean .T.
+round          1 new_window nonzero .T.
+exit NIL
+clean .T.
+round          2 new_window nonzero .T.
+exit NIL
+clean .T.
+extra exit NIL extra clean .T.exit code 0

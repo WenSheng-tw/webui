@@ -1,0 +1,6 @@
+
+exit NIL
+clean .T.
+new_window nonzero .T.
+exit NIL
+clean .T.exit code 0

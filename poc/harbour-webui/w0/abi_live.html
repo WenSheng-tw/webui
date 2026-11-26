@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WebUI W0 ABI test page</title>
+<script src="webui.js"></script>
+</head>
+<body>
+<p>W0 ABI test page. The C test drives it through webui_run and webui_script.</p>
+<script>
+window.__ready = 0;
+
+function waitReady() {
+    if (typeof webui !== 'undefined' && webui.isConnected()) {
+        window.__ready = 1;
+    } else {
+        setTimeout(waitReady, 50);
+    }
+}
+waitReady();
+
+async function p1() {
+    const r1 = await webui.call('abi_f', 123, 'x', true, 1.5);
+    const r2 = await webui.call('abi_i', '9223372036854775807', '-9223372036854775808', '0', '-1');
+    window.__r1 = r1 + '|' + r2;
+    window.__done1 = 1;
+}
+
+async function pslow() {
+    await Promise.all([webui.call('abi_slow'), webui.call('abi_slow')]);
+    window.__done_slow = 1;
+}
+
+async function pslow2() {
+    await Promise.all([webui.call('abi_slow'), webui.call('abi_slow')]);
+    window.__done_slow2 = 1;
+}
+
+async function pflood() {
+    for (let b = 0; b < 200; b++) {
+        const batch = [];
+        for (let k = 0; k < 50; k++) {
+            batch.push(webui.call('abi_n'));
+        }
+        await Promise.all(batch);
+    }
+    window.__done_flood = 1;
+}
+
+async function p3() {
+    const t0 = performance.now();
+    const g = await webui.call('abi_g', 'argG');
+    const dt = Math.round(performance.now() - t0);
+    const h = [];
+    for (let k = 0; k <= 5; k++) {
+        h.push(await webui.call('abi_h', k));
+    }
+    const j = [];
+    for (let k = 0; k <= 2; k++) {
+        j.push(await webui.call('abi_j', k));
+    }
+    window.__r3 = JSON.stringify({ g: g, dt: dt, h: h, j: j });
+    window.__done3 = 1;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+TAP version 13
+1..19
+ok 1 - header declares 112 functions (got 112)
+ok 2 - header function names are unique
+ok 3 - no function listed twice
+ok 4 - every header function is listed
+ok 5 - no listed function is absent from the header
+ok 6 - list has 112 rows (got 112)
+ok 7 - only known wave labels used
+ok 8 - W1 has 12 functions (got 12)
+ok 9 - W2 has 29 functions (got 29)
+ok 10 - W3 has 27 functions (got 27)
+ok 11 - W4 has 25 functions (got 25)
+ok 12 - W5 has 11 functions (got 11)
+ok 13 - EXCLUDED has 8 functions (got 8)
+ok 14 - in-scope waves sum to 104 (got 104)
+ok 15 - EXCLUDED set equals the 8 names (spec section 1 minus set_context and get_context, CEO decision)
+ok 16 - W1 set equals the 12 names of spec section 7
+ok 17 - set_context and get_context are W2 (CEO decision)
+ok 18 - get_hwnd functions are W4 (spec rev 1)
+ok 19 - list order follows the header order

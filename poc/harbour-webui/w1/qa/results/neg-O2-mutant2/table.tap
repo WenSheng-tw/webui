@@ -1,0 +1,9 @@
+TAP version 13
+# qa_neg case table, Harbour 3.2.0 (r2607071000)
+# 600 element binds, 600 accepted, table holds 600
+ok 1 - many binds on one window: table grows and the first 250 are accepted
+ok 2 - handler table count equals the accepted binds
+ok 3 - clean frees the whole table
+ok 4 - no bridge memory left
+ok 5 - case table reached its end without a crash
+1..5

@@ -1,0 +1,154 @@
+TAP version 13
+# mode 2 (hrb), suite headless, Harbour 3.2.0 (r2607071000)
+# hrb action: compile
+# headless suite
+ok 1 - rule 7: WEBUI_SET_TLS_CERTIFICATE is not exposed in W1
+ok 2 - all W1 names resolve (spot check)
+ok 3 - size_t conversion accepts 0, 1, 65535
+ok 4 - size_t conversion accepts 2^53
+ok 5 - size_t conversion rejects 2^53 + 2
+ok 6 - size_t conversion rejects 2^64
+ok 7 - size_t conversion rejects -1
+ok 8 - size_t conversion rejects 1.5
+ok 9 - size_t conversion rejects NaN
+ok 10 - size_t conversion rejects +inf and -inf
+ok 11 - rule 9 window size accepts 100x100 and 3840x2160
+ok 12 - rule 9 window size rejects 99, 3841, 2161 and 0
+ok 13 - rule 9 window position accepts 0,0 and 3000,1800
+ok 14 - rule 9 window position rejects 3001 and 1801
+ok 15 - rule 9 window position rejects negative and NaN
+ok 16 - rule 9 script timeout accepts 1 and 86400
+ok 17 - rule 9 script timeout rejects 0 and 86401
+ok 18 - rule 9 argument index accepts 0 and 16, rejects 17
+ok 19 - set_timeout accepts 0
+ok 20 - set_timeout accepts 60
+ok 21 - set_timeout accepts 30
+# set_timeout rejects 61: timeout: out of range 0..60
+ok 22 - set_timeout rejects 61
+# set_timeout rejects -1: timeout: not an integer between 0 and 2^53
+ok 23 - set_timeout rejects -1
+# set_timeout rejects 1.5: timeout: not an integer between 0 and 2^53
+ok 24 - set_timeout rejects 1.5
+# set_timeout rejects 10^300: timeout: not an integer between 0 and 2^53
+ok 25 - set_timeout rejects 10^300
+# set_timeout rejects 2^53 + 2: timeout: not an integer between 0 and 2^53
+ok 26 - set_timeout rejects 2^53 + 2
+# set_timeout rejects NaN: timeout: not an integer between 0 and 2^53
+ok 27 - set_timeout rejects NaN
+# set_timeout rejects infinity: timeout: not an integer between 0 and 2^53
+ok 28 - set_timeout rejects infinity
+# set_timeout rejects a string: timeout: a number is required
+ok 29 - set_timeout rejects a string
+# set_timeout rejects NIL: timeout: a number is required
+ok 30 - set_timeout rejects NIL
+# set_timeout rejects a missing argument: timeout: a number is required
+ok 31 - set_timeout rejects a missing argument
+ok 32 - set_config accepts show_wait_connection
+ok 33 - set_config accepts ui_event_blocking (rule 6)
+ok 34 - set_config accepts folder_monitor
+ok 35 - set_config accepts multi_client
+ok 36 - set_config accepts use_cookies
+# set_config rejects asynchronous_response (bridge owned, rule 3): option: asynchronous_response is managed by the bridge
+ok 37 - set_config rejects asynchronous_response (bridge owned, rule 3)
+# set_config rejects option 6: option: out of range 0..5
+ok 38 - set_config rejects option 6
+# set_config rejects option -1: option: not an integer between 0 and 2^53
+ok 39 - set_config rejects option -1
+# set_config rejects option 1.5: option: not an integer between 0 and 2^53
+ok 40 - set_config rejects option 1.5
+# set_config rejects option NaN: option: not an integer between 0 and 2^53
+ok 41 - set_config rejects option NaN
+# set_config rejects a numeric status: a logical value is required
+ok 42 - set_config rejects a numeric status
+# set_config rejects a string status: a logical value is required
+ok 43 - set_config rejects a string status
+# set_config rejects a missing status: a logical value is required
+ok 44 - set_config rejects a missing status
+# set_config rejects missing arguments: option: a number is required
+ok 45 - set_config rejects missing arguments
+ok 46 - new_window returns a positive integer
+ok 47 - second new_window returns a different id
+ok 48 - new_window marks WebUI as used (clean has work to do)
+# bind rejects window 0: window id: out of range 1..65535
+ok 49 - bind rejects window 0
+# bind rejects window -1: window id: not an integer between 0 and 2^53
+ok 50 - bind rejects window -1
+# bind rejects window 65536: window id: out of range 1..65535
+ok 51 - bind rejects window 65536
+# bind rejects window 1.5: window id: not an integer between 0 and 2^53
+ok 52 - bind rejects window 1.5
+# bind rejects window NaN: window id: not an integer between 0 and 2^53
+ok 53 - bind rejects window NaN
+# bind rejects a string window: window id: a number is required
+ok 54 - bind rejects a string window
+# bind rejects a numeric element: element: a string is required
+ok 55 - bind rejects a numeric element
+# bind rejects a NIL handler: handler: a string is required
+ok 56 - bind rejects a NIL handler
+# bind rejects an empty handler name: handler: a function name of 1 to 64 characters is required
+ok 57 - bind rejects an empty handler name
+# bind rejects an unknown handler name: handler: not a Harbour function (add REQUEST) or bind failed
+ok 58 - bind rejects an unknown handler name
+# bind rejects a handler name of 65 characters: handler: a function name of 1 to 64 characters is required
+ok 59 - bind rejects a handler name of 65 characters
+# bind rejects a missing handler: handler: a string is required
+ok 60 - bind rejects a missing handler
+ok 61 - failed binds leave the handler table empty
+ok 62 - bind returns a positive integer id
+ok 63 - bind adds one handler table entry
+ok 64 - a second element gets another bind id; the handler name is case-insensitive
+ok 65 - bind accepts the empty element (all events)
+ok 66 - bind works on a second window
+ok 67 - handler table holds every successful bind
+ok 68 - PoC-001 name WEBUI_BINDHB still binds
+ok 69 - WEBUI_BINDHB returns 0 instead of raising on bad input
+ok 70 - PoC-001 name WEBUI_NEWWINDOW still creates a window
+# show rejects window 0: window id: out of range 1..65535
+ok 71 - show rejects window 0
+# show rejects a negative window: window id: not an integer between 0 and 2^53
+ok 72 - show rejects a negative window
+# show rejects window 70000: window id: out of range 1..65535
+ok 73 - show rejects window 70000
+# show rejects window NaN: window id: not an integer between 0 and 2^53
+ok 74 - show rejects window NaN
+# show rejects window 2^64: window id: not an integer between 0 and 2^53
+ok 75 - show rejects window 2^64
+# show rejects NIL content: content: a string is required
+ok 76 - show rejects NIL content
+# show rejects numeric content: content: a string is required
+ok 77 - show rejects numeric content
+# show rejects missing content: content: a string is required
+ok 78 - show rejects missing content
+# show rejects content with a NUL byte: content: must not contain a NUL byte
+ok 79 - show rejects content with a NUL byte
+# close rejects window 0: window id: out of range 1..65535
+ok 80 - close rejects window 0
+# close rejects window 65536: window id: out of range 1..65535
+ok 81 - close rejects window 65536
+# close rejects NaN: window id: not an integer between 0 and 2^53
+ok 82 - close rejects NaN
+# close rejects a string: window id: a number is required
+ok 83 - close rejects a string
+# close rejects a missing argument: window id: a number is required
+ok 84 - close rejects a missing argument
+ok 85 - close of a window that was never shown does nothing
+# get_string outside a handler raises: WEBUI_GET_STRING is valid only inside a bound handler
+ok 86 - get_string outside a handler raises
+# return_string outside a handler raises: WEBUI_RETURN_STRING is valid only inside a bound handler
+ok 87 - return_string outside a handler raises
+# unknown bridge statistic raises: statistic: unknown name
+ok 88 - unknown bridge statistic raises
+ok 89 - wait_async returns .F. before the first show
+ok 90 - wait returns at once before the first show
+ok 91 - pump with an empty queue dispatches nothing
+ok 92 - exit without a shown window does not hang
+ok 93 - clean after exit reports that it cleaned
+ok 94 - clean empties the handler table and frees every bridge allocation
+ok 95 - a second clean is a no-op
+ok 96 - bridge allocation and free counts are equal
+ok 97 - new_window works after exit and clean (rebuild without show)
+ok 98 - bind works after clean
+ok 99 - clean after rebuild cleans again
+ok 100 - no bridge memory is left after the second clean
+ok 101 - at the end every bridge-owned allocation is freed (counted by the bridge)
+1..101

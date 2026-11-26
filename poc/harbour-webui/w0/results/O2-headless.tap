@@ -1,0 +1,64 @@
+TAP version 13
+# mode: headless (groups A, C, D)
+# A1 real header: bool=1 config=4 size_t=8 void*=8 long long=8 int=4
+ok 1 - A1 sizeof(real bool) equals sizeof(ubool)
+ok 2 - A1 sizeof(webui_config) equals sizeof(int)
+ok 3 - A1 size_t has pointer width in both units
+ok 4 - A1 long long is 8 bytes (real header unit and int64 unit)
+ok 5 - A1 int has the same size in both units
+ok 6 - A2 mirrored webui_event_t equals the real one (size 64, 8 offsets, 0 mismatches)
+ok 7 - A3 32 enumerators: bridge constants equal the real header values (0 mismatches)
+ok 8 - C0 webui_new_window returned 1
+ok 9 - C0 dirty-call trampoline available: 1 (x86-64 Linux only) # informational
+ok 10 - C1 harness control: a function that sets only %al returned rax=0xdeadbeefcafeba01; low byte 1, upper bits dirty: 1, int read equals 1: 0, ubool read equals 1: 1
+ok 11 - C1 set_root_folder("/tmp") -> 1: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 12 - C1 set_root_folder("/tmp") negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 13 - C1 set_root_folder("/nonexistent_abi") -> 0: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 14 - C1 set_root_folder("/nonexistent_abi") negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 15 - C1 set_default_root_folder("/tmp") -> 1: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 16 - C1 set_default_root_folder("/tmp") negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 17 - C1 set_default_root_folder("/nonexistent_abi") -> 0: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 18 - C1 set_default_root_folder("/nonexistent_abi") negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 19 - C1 helper listener holds port 46981
+ok 20 - C1 set_port(port in use) -> 0: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 21 - C1 set_port(port in use) negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 22 - C1 webui_get_free_port returned 33319
+ok 23 - C1 set_port(free port) -> 1: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 24 - C1 set_port(free port) negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 25 - C1 is_shown(never shown window) -> 0: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 26 - C1 is_shown(never shown window) negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 27 - C1 browser_exist(Safari) -> 0: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 28 - C1 browser_exist(Safari) negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 29 - C1 browser_exist(Chrome) -> 1: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 30 - C1 browser_exist(Chrome) negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 31 - C1 interface_is_app_running (before first show) -> 0: 1000 iterations, 0 mismatches, 0 outside {0,1}
+ok 32 - C1 interface_is_app_running (before first show) negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 33 - C1 is_high_contrast -> 0: 20 iterations, 0 mismatches, 0 outside {0,1}
+ok 34 - C1 is_high_contrast negative control: upper bytes of rax left dirty 0 times, reading the result as int would be wrong 0 times # informational
+ok 35 - C2 set_public(int 1) listens on 00000000 (port 30123), expected 00000000 (0.0.0.0)
+ok 36 - C2 set_public(int 0) listens on 0100007F (port 51386), expected 0100007F (127.0.0.1)
+ok 37 - C2 set_public(real bool true) listens on 00000000, identical to the int call (00000000)
+ok 38 - C2 set_public(real bool false) listens on 0100007F, identical to the int call (0100007F)
+ok 39 - C2 set_public(int 256) listens on 0100007F (port 39586): documented unsupported, callee reads the low byte only # informational
+ok 40 - C3 use_cookies=1: GET / returned 307 bytes, Set-Cookie webui_auth present: 1
+ok 41 - C3 use_cookies=0: GET / returned 214 bytes, Set-Cookie webui_auth present: 0
+ok 42 - C3 webui_set_config(int, int) called with all 6 options set and cleared, no crash, defaults restored
+# C3 folder_monitor, multi_client, ui_event_blocking, asynchronous_response and show_wait_connection effects are observed in group E
+ok 43 - C4 webui_encode("hello") == "aGVsbG8="
+ok 44 - C4 webui_decode round trip == "hello"
+ok 45 - C4 webui_get_mime_type("index.html") == "text/html"
+ok 46 - C4 last error stub is 0 and empty string
+ok 47 - D1 size_t/double round trip exact for 0, 1, 65535, 2^31-1, 2^32-1, 2^53 (0 failures)
+ok 48 - D1 rejected without conversion: 2^53+2, 2^64, -1, NaN, 1.5, +-Inf, -0.5 (0 accepted)
+ok 49 - D1 size2n refuses SIZE_MAX (above 2^53) instead of rounding
+ok 50 - D1 negative zero is accepted as 0
+ok 51 - D2 200 windows: ids in 1..65535, exact through double, 0 out of range, 0 duplicates (first 7 last 206)
+ok 52 - D2 new_window_id(60000) = 60000, get_new_window_id() = 207
+ok 53 - D2 process ids of a window without a browser: parent 576351 child 0, free port 19742
+ok 54 - D3 int64 values within 2^53 are exact numbers and round trip to the same decimal text (0 failures)
+ok 55 - D3 int64 beyond 2^53 is signalled as overflow and returned as exact decimal text (0 failures)
+ok 56 - D3 LLONG_MAX and LLONG_MIN print as expected
+ok 57 - D3 double to int64 refuses values above 2^53, fractions and NaN (0 accepted)
+ok 58 - counters: allocation counting is not enabled in this build (variant cnt only) # informational
+1..58
+# all 58 passed

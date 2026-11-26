@@ -1,0 +1,21 @@
+== W1 run 2026-11-26T09:29:47Z, gcc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, Harbour Make (hbmk2) 3.2.0 (r2026-07-07 10:00)
+== static: C89 compile of every bridge unit (A7)
+ok: check-c89.sh (14 checks)
+== static: W0 checks (function list, enums, prototypes of bridge_decl.h)
+ok: gen_functions.py and check_protos.py (19 + 14 checks)
+ok: both generated REQUEST files are current
+== rule 7: the bridge does not expose or reference webui_set_tls_certificate
+ok: no TLS symbol in the bridge objects or in the Harbour symbol table of the exe
+== A13 hash rules on tests/t_w1.prg (copy in a temp folder, headless suite)
+ok: no hrb, the runner compiles and writes hrb + md5 sidecar
+ok: identical hash skips the compile (hrb byte-identical)
+ok: changed prg recompiles and the sidecar holds the new md5
+ok: unchanged again reuses
+ok: prg missing, the existing hrb is used and its tests pass
+ok: prg and hrb both missing reports missing (test fails by design)
+== variant O2
+ok: O2 executor self-test (23 ok)
+ok: O2 mode linked (297 ok, 0 not ok)
+ok: O2 mode hrb (297 ok, 0 not ok)
+ok: O2 mode 1 and mode 2 produce identical TAP bodies (A14)
+== ALL PASSED

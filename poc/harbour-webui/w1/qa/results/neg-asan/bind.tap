@@ -1,0 +1,67 @@
+TAP version 13
+# qa_neg case bind, Harbour 3.2.0 (r2607071000)
+ok 1 - setup: window created
+# bind(handler string value) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 2 - bind(handler string value) rejected
+# bind(element NIL value) rejected: element: a string is required
+ok 3 - bind(element NIL value) rejected
+# bind(handler NIL value) rejected: handler: a string is required
+ok 4 - bind(handler NIL value) rejected
+# bind(element logical value) rejected: element: a string is required
+ok 5 - bind(element logical value) rejected
+# bind(handler logical value) rejected: handler: a string is required
+ok 6 - bind(handler logical value) rejected
+# bind(element array value) rejected: element: a string is required
+ok 7 - bind(element array value) rejected
+# bind(handler array value) rejected: handler: a string is required
+ok 8 - bind(handler array value) rejected
+# bind(element hash value) rejected: element: a string is required
+ok 9 - bind(element hash value) rejected
+# bind(handler hash value) rejected: handler: a string is required
+ok 10 - bind(handler hash value) rejected
+# bind(element codeblock value) rejected: element: a string is required
+ok 11 - bind(element codeblock value) rejected
+# bind(handler codeblock value) rejected: handler: a string is required
+ok 12 - bind(handler codeblock value) rejected
+# bind(element date value) rejected: element: a string is required
+ok 13 - bind(element date value) rejected
+# bind(handler date value) rejected: handler: a string is required
+ok 14 - bind(handler date value) rejected
+# bind(handler name of 0 chars, hostile) rejected: handler: a function name of 1 to 64 characters is required
+ok 15 - bind(handler name of 0 chars, hostile) rejected
+# bind(handler name of 1 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 16 - bind(handler name of 1 chars, hostile) rejected
+# bind(handler name of 4 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 17 - bind(handler name of 4 chars, hostile) rejected
+# bind(handler name of 4 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 18 - bind(handler name of 4 chars, hostile) rejected
+# bind(handler name of 4 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 19 - bind(handler name of 4 chars, hostile) rejected
+# bind(handler name of 3 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 20 - bind(handler name of 3 chars, hostile) rejected
+# bind(handler name of 10 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 21 - bind(handler name of 10 chars, hostile) rejected
+# bind(handler name of 13 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 22 - bind(handler name of 13 chars, hostile) rejected
+# bind(handler name of 64 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 23 - bind(handler name of 64 chars, hostile) rejected
+# bind(handler name of 65 chars, hostile) rejected: handler: a function name of 1 to 64 characters is required
+ok 24 - bind(handler name of 65 chars, hostile) rejected
+# bind(handler name of 100000 chars, hostile) rejected: handler: a function name of 1 to 64 characters is required
+ok 25 - bind(handler name of 100000 chars, hostile) rejected
+# bind(handler name of 5 chars, hostile) rejected: handler: must not contain a NUL byte
+ok 26 - bind(handler name of 5 chars, hostile) rejected
+# bind(handler name of 1 chars, hostile) rejected: handler: must not contain a NUL byte
+ok 27 - bind(handler name of 1 chars, hostile) rejected
+# bind(handler name of 5 chars, hostile) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 28 - bind(handler name of 5 chars, hostile) rejected
+# bind(element with NUL) rejected: element: must not contain a NUL byte
+ok 29 - bind(element with NUL) rejected
+ok 30 - rejected binds left the handler table empty
+# 1 MB element name bind returned          1
+ok 31 - bind(element of 1 MB) returns without a crash
+ok 32 - valid bind still works after the rejected ones
+ok 33 - clean after the hostile binds
+ok 34 - no bridge-owned memory left after clean
+ok 35 - case bind reached its end without a crash
+1..35

@@ -1,0 +1,8 @@
+TAP version 13
+# qa_neg case finding_exit_first, Harbour 3.2.0 (r2607071000)
+ok 1 - exit before any window
+ok 2 - clean after the lone exit
+not ok 3 - new_window works after exit and clean (spec section 3: rebuild after clean)
+ok 4 - case finding_exit_first reached its end without a crash
+1..4
+# FAILED 1 of 4

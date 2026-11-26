@@ -1,0 +1,77 @@
+TAP version 13
+# qa_neg case timeout, Harbour 3.2.0 (r2607071000)
+not ok 1 - set_timeout(61) out of range 0..60
+# set_timeout(62) out of range 0..60: timeout: out of range 0..61
+ok 2 - set_timeout(62) out of range 0..60
+# set_timeout(100) out of range 0..60: timeout: out of range 0..61
+ok 3 - set_timeout(100) out of range 0..60
+# set_timeout(3600) out of range 0..60: timeout: out of range 0..61
+ok 4 - set_timeout(3600) out of range 0..60
+# set_timeout(86400) out of range 0..60: timeout: out of range 0..61
+ok 5 - set_timeout(86400) out of range 0..60
+# set_timeout(65535) out of range 0..60: timeout: out of range 0..61
+ok 6 - set_timeout(65535) out of range 0..60
+# set_timeout(2147483648.00) out of range 0..60: timeout: out of range 0..61
+ok 7 - set_timeout(2147483648.00) out of range 0..60
+# set_timeout(4294967296.00) out of range 0..60: timeout: out of range 0..61
+ok 8 - set_timeout(4294967296.00) out of range 0..60
+# set_timeout(4503599627370496.00) out of range 0..60: timeout: out of range 0..61
+ok 9 - set_timeout(4503599627370496.00) out of range 0..60
+# set_timeout(NaN) rejected: timeout: not an integer between 0 and 2^53
+ok 10 - set_timeout(NaN) rejected
+# set_timeout(-NaN) rejected: timeout: not an integer between 0 and 2^53
+ok 11 - set_timeout(-NaN) rejected
+# set_timeout(+inf) rejected: timeout: not an integer between 0 and 2^53
+ok 12 - set_timeout(+inf) rejected
+# set_timeout(-inf) rejected: timeout: not an integer between 0 and 2^53
+ok 13 - set_timeout(-inf) rejected
+# set_timeout(2^53+2) rejected: timeout: not an integer between 0 and 2^53
+ok 14 - set_timeout(2^53+2) rejected
+# set_timeout(2^63) rejected: timeout: not an integer between 0 and 2^53
+ok 15 - set_timeout(2^63) rejected
+# set_timeout(2^64) rejected: timeout: not an integer between 0 and 2^53
+ok 16 - set_timeout(2^64) rejected
+# set_timeout(-2^63) rejected: timeout: not an integer between 0 and 2^53
+ok 17 - set_timeout(-2^63) rejected
+# set_timeout(DBL_MAX) rejected: timeout: not an integer between 0 and 2^53
+ok 18 - set_timeout(DBL_MAX) rejected
+# set_timeout(denormal) rejected: timeout: not an integer between 0 and 2^53
+ok 19 - set_timeout(denormal) rejected
+# set_timeout(-1) rejected: timeout: not an integer between 0 and 2^53
+ok 20 - set_timeout(-1) rejected
+# set_timeout(-0.5) rejected: timeout: not an integer between 0 and 2^53
+ok 21 - set_timeout(-0.5) rejected
+# set_timeout(0.5) rejected: timeout: not an integer between 0 and 2^53
+ok 22 - set_timeout(0.5) rejected
+# set_timeout(1.0000001) rejected: timeout: not an integer between 0 and 2^53
+ok 23 - set_timeout(1.0000001) rejected
+# set_timeout(-1e300) rejected: timeout: not an integer between 0 and 2^53
+ok 24 - set_timeout(-1e300) rejected
+# set_timeout(1e300) rejected: timeout: not an integer between 0 and 2^53
+ok 25 - set_timeout(1e300) rejected
+# set_timeout(-1000000) rejected: timeout: not an integer between 0 and 2^53
+ok 26 - set_timeout(-1000000) rejected
+# set_timeout(string value) rejected: timeout: a number is required
+ok 27 - set_timeout(string value) rejected
+# set_timeout(NIL value) rejected: timeout: a number is required
+ok 28 - set_timeout(NIL value) rejected
+# set_timeout(logical value) rejected: timeout: a number is required
+ok 29 - set_timeout(logical value) rejected
+# set_timeout(array value) rejected: timeout: a number is required
+ok 30 - set_timeout(array value) rejected
+# set_timeout(hash value) rejected: timeout: a number is required
+ok 31 - set_timeout(hash value) rejected
+# set_timeout(codeblock value) rejected: timeout: a number is required
+ok 32 - set_timeout(codeblock value) rejected
+# set_timeout(date value) rejected: timeout: a number is required
+ok 33 - set_timeout(date value) rejected
+# set_timeout() without argument rejected: timeout: a number is required
+ok 34 - set_timeout() without argument rejected
+ok 35 - set_timeout(0) accepted
+ok 36 - set_timeout(1) accepted
+ok 37 - set_timeout(59) accepted
+ok 38 - set_timeout(60) accepted
+ok 39 - set_timeout(60.0) accepted (integral double)
+ok 40 - case timeout reached its end without a crash
+1..40
+# FAILED 1 of 40

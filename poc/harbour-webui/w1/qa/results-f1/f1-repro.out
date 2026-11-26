@@ -1,0 +1,8 @@
+
+exit NIL
+clean .T.
+new_window          1
+clean .T.
+exit NIL
+clean .T.
+new_window          1exit code 0

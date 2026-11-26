@@ -1,0 +1,4 @@
+ok - A4 click 1 shows 'Harbour says: Hello, World! (call #1)'
+ok - A4 click 2 shows 'Harbour says: Hello, World! (call #2)'
+ok - A4 click 3 shows 'Harbour says: Hello, World! (call #3)'
+ok - program ended with exit code 0 after the window closed
