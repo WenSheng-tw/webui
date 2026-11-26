@@ -38,6 +38,10 @@ set "BUILD_RC=%ERRORLEVEL%"
 
 type "%LOG%"
 echo.
+rem Success needs exit code 0 AND the BUILD OK marker line in the log.
+rem This catches any path in :main that ends without a proper exit code.
+if "%BUILD_RC%"=="0" findstr /b /c:"BUILD OK" "%LOG%" >nul 2>&1
+if "%BUILD_RC%"=="0" if errorlevel 1 set "BUILD_RC=1"
 if "%BUILD_RC%"=="0" goto done_ok
 
 echo ======================================================================
@@ -77,6 +81,7 @@ set "HBDEV=d:\hbdev32"
 set "HB_BIN=%HBDEV%\harbour-core\bin\win\msvc"
 set "HBMK2=%HB_BIN%\hbmk2.exe"
 set "WEBUI_LIB=%ROOT%\..\webui\dist\webui-2-static.lib"
+set "WEBUI_INC=%ROOT%\..\webui\include"
 
 if not defined VCVARSALL set "VCVARSALL=C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"
 
@@ -103,8 +108,15 @@ if not exist "%ROOT%\prg\main.prg" call :missing "%ROOT%\prg\main.prg"
 if not exist "%ROOT%\prg\hello.prg" call :missing "%ROOT%\prg\hello.prg"
 if not exist "%ROOT%\src\bridge.c" call :missing "%ROOT%\src\bridge.c"
 if not exist "%ROOT%\ui\index.html" call :missing "%ROOT%\ui\index.html"
+if not exist "%WEBUI_INC%\webui.h" call :missing "%WEBUI_INC%\webui.h"
 if defined MISSING goto err_preflight
-echo Preflight OK: hbmk2.exe and all 4 source files found.
+echo Preflight OK: hbmk2.exe, 4 source files and webui.h found.
+
+rem OpenSSL, curl and ADS roots are only needed to build Harbour contribs.
+rem The PoC link step needs none of them, so a missing root is a WARN only.
+call :warn_dir "%HB_WITH_OPENSSL%" OpenSSL
+call :warn_dir "%HB_WITH_CURL%" curl
+call :warn_dir "%HB_WITH_ADS%" ADS
 
 rem ---- 3. WebUI static library -----------------------------------------
 if not exist "%WEBUI_LIB%" goto err_weblib
@@ -118,6 +130,8 @@ call "%VCVARSALL%" x86
 if errorlevel 1 goto err_vcvarsrc
 where cl.exe >nul 2>&1
 if errorlevel 1 goto err_nocl
+where link.exe >nul 2>&1
+if errorlevel 1 goto err_nolink
 
 set "PATH=%HB_BIN%;%PATH%"
 
@@ -141,6 +155,12 @@ exit /b 0
 :missing
 echo [ERROR] Required file not found: %~1
 set "MISSING=1"
+exit /b 0
+
+:warn_dir
+if exist "%~1\" exit /b 0
+echo [WARN] %~2 root not found: %~1
+echo        Not needed to link the PoC with hbmk2, so the build continues.
 exit /b 0
 
 :err_preflight
@@ -174,6 +194,10 @@ exit /b 1
 
 :err_nocl
 echo [ERROR] cl.exe is not on PATH after vcvarsall.bat x86.
+exit /b 1
+
+:err_nolink
+echo [ERROR] link.exe is not on PATH after vcvarsall.bat x86.
 exit /b 1
 
 :err_hbmk2
