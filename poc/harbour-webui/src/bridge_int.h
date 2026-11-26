@@ -6,8 +6,13 @@
  *                   allocation counters, WEBUI_BIND / WAIT / WAIT_ASYNC / EXIT / CLEAN /
  *                   SET_TIMEOUT / SET_CONFIG and the test statistics
  *   bridge_win.c    WEBUI_NEW_WINDOW / SHOW / CLOSE
- *   bridge_event.c  the bind trampoline, the main-thread event queue and its dispatcher,
- *                   WEBUI_GET_STRING / RETURN_STRING, WEBUI_PUMP
+ *   bridge_event.c  the bind trampolines (plain and interface), the main-thread event queue
+ *                   and its dispatcher, WEBUI_GET_STRING / RETURN_STRING / the interface
+ *                   response, WEBUI_PUMP
+ *   bridge_misc.c   W2: the event argument getters and return_*, encode / decode / free,
+ *                   last_error, interface_* getters, window id, app running (needs
+ *                   bridge_i64.c)
+ *   bridge_i64.c    the only C99 unit: the four long long WebUI calls
  *   bridge.c        PoC-001 compatibility names (WEBUI_NEWWINDOW, WEBUI_BINDHB)
  *
  * Threading: WebUI calls the trampoline on its own threads. The trampoline only touches
@@ -50,11 +55,14 @@ struct webui_event_t
 
 #define BRIDGE_HANDLER_NAME_MAX 64
 
-/* Queue node for one bound-function call (bridge_event.c, allocated by the trampoline). */
+/* Queue node for one bound-function call (bridge_event.c, allocated by the trampoline).
+ * It keeps numbers and a copy of the element name only, never WebUI's event pointer: WebUI
+ * functions are called with a temporary event built from window and event number, which
+ * WebUI validates (a finished or unknown event is ignored), so nothing can dangle. */
 struct bridge_event
 {
     struct bridge_event *next;
-    webui_event_t *e;
+    char *element;
     size_t window;
     size_t event_type;
     size_t event_number;
@@ -96,6 +104,7 @@ int bridge_range_script_timeout(size_t seconds);
 
 /* ---- bridge_event.c ----------------------------------------------------------------- */
 void bridge_on_event(webui_event_t *e);
+void bridge_on_iface_event(size_t window, size_t event_type, char *element, size_t event_number, size_t bind_id);
 int bridge_pump(void);
 int bridge_in_dispatch(void);
 size_t bridge_queue_length(void);
@@ -103,12 +112,44 @@ void bridge_queue_discard(void);
 void bridge_answer_all(void);
 /* Statistics for tests: 0 queued, 1 dispatched, 2 auto-responded, 3 handler-missing. */
 size_t bridge_event_stat(int which);
+/* The event being dispatched. Fills *tmp (window, event number, element, bind id, type) and
+ * returns 1; outside a handler it raises "<fn> is valid only inside a bound handler" and
+ * returns 0. */
+int bridge_cur_event(const char *fn, webui_event_t *tmp);
+/* 1 if the current event had no answer yet (and marks it answered), 0 if it was answered. */
+int bridge_claim_answer(void);
+/* Like bridge_claim_answer for an explicit event: 0 only if it is the current event and was
+ * answered already; any other event number is passed through (WebUI ignores stale ones). */
+int bridge_claim_event(size_t window, size_t event_number);
 
 /* ---- bridge_core.c: shared by bridge.c and HB_FUN_WEBUI_BIND ------------------------ */
 /* Returns the bind id, 0 on any failure (nothing raised). */
 size_t bridge_bind(size_t window, const char *element, const char *handler);
 int bridge_new_window(size_t *window);
 void bridge_mark_exited(void);
+int bridge_is_exited(void);
+void bridge_mark_shown(void);
+int bridge_is_shown(void);
+/* Counters of the W2 memory paths (WebUI results freed by the bridge, context slots). */
+void bridge_note_webui_result(void);
+void bridge_note_webui_free(void);
+
+/* ---- bridge_core.c: context slot table (rule 11) ------------------------------------ */
+/* Returns a copy of the stored value as a new Harbour item (release with hb_itemRelease),
+ * or NULL for slot 0 or an unknown slot. */
+void *bridge_context_value(size_t slot);
+
+/* ---- bridge_i64.c (C99): the long long WebUI calls ---------------------------------- */
+/* Return 0 and *num when the value is exact in a double (|v| <= 2^53), 1 and the decimal text
+ * in str otherwise. e is a webui_event_t pointer. */
+int bridge_get_int_at(void *e, size_t index, double *num, char *str, size_t strsize);
+int bridge_get_int(void *e, double *num, char *str, size_t strsize);
+int bridge_interface_get_int_at(size_t window, size_t event_number, size_t index, double *num, char *str,
+                                size_t strsize);
+/* 1 if sent to webui_return_int, 0 if the input was not an exact integer (nothing sent). */
+int bridge_return_int(void *e, double d);
+/* Same for decimal text: optional '-', 1 to 19 digits, within long long. */
+int bridge_return_int_text(void *e, const char *s);
 /* hb_retnd of an id or count; values above 2^53 cannot occur for ids and are returned as 0. */
 void bridge_ret_size(size_t v);
 

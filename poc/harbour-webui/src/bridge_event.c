@@ -1,17 +1,24 @@
 /*
- * bridge_event.c  --  bind trampoline, main-thread event queue, dispatcher (ISO C89).
+ * bridge_event.c  --  bind trampolines, main-thread event queue, dispatcher (ISO C89).
  *
  * Spec 2.1 rule 3. WebUI runs in asynchronous_response mode (bridge_ensure_async): after
- * the callback returns WebUI keeps the browser call open until webui_return_string() is
- * called, and the event pointer stays valid until then. The trampoline therefore only
- * queues the event. bridge_pump() runs on the main thread (WEBUI_PUMP, WEBUI_WAIT,
- * WEBUI_WAIT_ASYNC), calls the Harbour handler registered for the bind id, and answers
- * the browser. No Harbour VM call happens on a WebUI thread.
+ * the callback returns WebUI keeps the browser call open until a response is set. The
+ * trampolines therefore only queue the call (window, event number, element, bind id).
+ * bridge_pump() runs on the main thread (WEBUI_PUMP, WEBUI_WAIT, WEBUI_WAIT_ASYNC), calls the
+ * Harbour handler registered for the bind id, and answers the browser. No Harbour VM call
+ * happens on a WebUI thread.
  *
- * An event still queued when the application exits is dropped without an answer: WebUI
- * ignores responses to abandoned events and keeps the event memory itself.
+ * Two trampolines exist: bridge_on_event for WEBUI_BIND (webui_bind) and
+ * bridge_on_iface_event for WEBUI_INTERFACE_BIND (webui_interface_bind). The dispatcher does
+ * not care which one queued the call. It never keeps WebUI's event pointer: every WebUI call
+ * about an event gets a temporary webui_event_t holding only window, event number and
+ * element, and WebUI validates the event number (a finished or unknown event is ignored).
+ *
+ * An event still queued when the application exits is answered with an empty string first
+ * (bridge_answer_all): WebUI keeps the memory of an unanswered event when it exits.
  */
 
+#include <stdio.h>
 #include <string.h>
 
 #include "bridge_int.h"
@@ -28,23 +35,63 @@ static size_t s_dispatched = 0;
 static size_t s_auto = 0;
 static size_t s_missing = 0;
 
+static void ev_tmp(const struct bridge_event *ev, webui_event_t *tmp)
+{
+    memset(tmp, 0, sizeof(webui_event_t));
+    tmp->window = ev->window;
+    tmp->event_type = ev->event_type;
+    tmp->element = ev->element;
+    tmp->event_number = ev->event_number;
+    tmp->bind_id = ev->bind_id;
+}
+
+static void ev_free(struct bridge_event *ev)
+{
+    if (ev != NULL)
+    {
+        bridge_free(ev->element);
+        bridge_free(ev);
+    }
+}
+
+static void respond(const struct bridge_event *ev, const char *text)
+{
+    webui_event_t tmp;
+
+    ev_tmp(ev, &tmp);
+    webui_return_string(&tmp, text);
+}
+
 /* Runs on a WebUI thread. */
-void bridge_on_event(webui_event_t *e)
+static void queue_event(size_t window, size_t event_type, const char *element, size_t event_number,
+                        size_t bind_id)
 {
     struct bridge_event *ev;
+    webui_event_t tmp;
 
     ev = (struct bridge_event *) bridge_malloc(sizeof(struct bridge_event));
+    if (ev != NULL)
+    {
+        ev->element = bridge_strdup(element != NULL ? element : "");
+        if (ev->element == NULL)
+        {
+            bridge_free(ev);
+            ev = NULL;
+        }
+    }
     if (ev == NULL)
     {
-        webui_return_string(e, "");
+        memset(&tmp, 0, sizeof(tmp));
+        tmp.window = window;
+        tmp.event_number = event_number;
+        webui_return_string(&tmp, "");
         return;
     }
     ev->next = NULL;
-    ev->e = e;
-    ev->window = e->window;
-    ev->event_type = e->event_type;
-    ev->event_number = e->event_number;
-    ev->bind_id = e->bind_id;
+    ev->window = window;
+    ev->event_type = event_type;
+    ev->event_number = event_number;
+    ev->bind_id = bind_id;
     bridge_lock();
     if (s_tail == NULL)
     {
@@ -57,6 +104,17 @@ void bridge_on_event(webui_event_t *e)
     s_tail = ev;
     s_queued++;
     bridge_unlock();
+}
+
+void bridge_on_event(webui_event_t *e)
+{
+    queue_event(e->window, e->event_type, e->element, e->event_number, e->bind_id);
+}
+
+void bridge_on_iface_event(size_t window, size_t event_type, char *element, size_t event_number,
+                           size_t bind_id)
+{
+    queue_event(window, event_type, element, event_number, bind_id);
 }
 
 static struct bridge_event *queue_take(void)
@@ -94,7 +152,7 @@ void bridge_queue_discard(void)
 
     while ((ev = queue_take()) != NULL)
     {
-        bridge_free(ev);
+        ev_free(ev);
     }
 }
 
@@ -118,6 +176,38 @@ size_t bridge_event_stat(int which)
     }
 }
 
+int bridge_cur_event(const char *fn, webui_event_t *tmp)
+{
+    char msg[128];
+
+    if (s_cur == NULL)
+    {
+        sprintf(msg, "%.60s is valid only inside a bound handler", fn);
+        return bridge_raise(msg);
+    }
+    ev_tmp(s_cur, tmp);
+    return 1;
+}
+
+int bridge_claim_answer(void)
+{
+    if (s_cur == NULL || s_cur_responded)
+    {
+        return 0;
+    }
+    s_cur_responded = 1;
+    return 1;
+}
+
+int bridge_claim_event(size_t window, size_t event_number)
+{
+    if (s_cur != NULL && s_cur->window == window && s_cur->event_number == event_number)
+    {
+        return bridge_claim_answer();
+    }
+    return 1;
+}
+
 static void call_handler(struct bridge_event *ev, const char *arg)
 {
     char name[BRIDGE_HANDLER_NAME_MAX + 1];
@@ -136,7 +226,7 @@ static void call_handler(struct bridge_event *ev, const char *arg)
     if (dyn == NULL || !hb_dynsymIsFunction(dyn))
     {
         s_missing++;
-        webui_return_string(ev->e, "ERROR: Harbour handler not found");
+        respond(ev, "ERROR: Harbour handler not found");
         s_cur_responded = 1;
         return;
     }
@@ -153,7 +243,7 @@ static void call_handler(struct bridge_event *ev, const char *arg)
         ret = hb_stackReturnItem();
         if (ret != NULL && (hb_itemType(ret) & BRIDGE_HB_IT_STRING) != 0)
         {
-            webui_return_string(ev->e, hb_itemGetCPtr(ret));
+            respond(ev, hb_itemGetCPtr(ret));
             s_cur_responded = 1;
         }
     }
@@ -169,15 +259,15 @@ void bridge_answer_all(void)
 
     if (s_cur != NULL && !s_cur_responded)
     {
-        webui_return_string(s_cur->e, "");
+        respond(s_cur, "");
         s_cur_responded = 1;
         s_auto++;
     }
     while ((ev = queue_take()) != NULL)
     {
-        webui_return_string(ev->e, "");
+        respond(ev, "");
         s_auto++;
-        bridge_free(ev);
+        ev_free(ev);
     }
 }
 
@@ -186,6 +276,7 @@ void bridge_answer_all(void)
 int bridge_pump(void)
 {
     struct bridge_event *ev;
+    webui_event_t tmp;
     const char *arg;
     int n = 0;
 
@@ -196,7 +287,8 @@ int bridge_pump(void)
     s_pumping = 1;
     while ((ev = queue_take()) != NULL)
     {
-        arg = webui_get_string(ev->e);
+        ev_tmp(ev, &tmp);
+        arg = webui_get_string(&tmp);
         if (arg == NULL)
         {
             arg = "";
@@ -206,13 +298,13 @@ int bridge_pump(void)
         call_handler(ev, arg);
         if (!s_cur_responded)
         {
-            webui_return_string(ev->e, "");
+            respond(ev, "");
             s_auto++;
         }
         s_cur = NULL;
         s_dispatched++;
         n++;
-        bridge_free(ev);
+        ev_free(ev);
     }
     s_pumping = 0;
     return n;
@@ -228,14 +320,14 @@ void HB_FUN_WEBUI_PUMP(void)
  * argument of the JavaScript call, the same text the handler receives as parameter 1. */
 void HB_FUN_WEBUI_GET_STRING(void)
 {
+    webui_event_t tmp;
     const char *s;
 
-    if (s_cur == NULL)
+    if (!bridge_cur_event("WEBUI_GET_STRING", &tmp))
     {
-        bridge_raise("WEBUI_GET_STRING is valid only inside a bound handler");
         return;
     }
-    s = webui_get_string(s_cur->e);
+    s = webui_get_string(&tmp);
     hb_retc(s != NULL ? s : "");
 }
 
@@ -244,23 +336,42 @@ void HB_FUN_WEBUI_GET_STRING(void)
  * no answer was given. */
 void HB_FUN_WEBUI_RETURN_STRING(void)
 {
+    webui_event_t tmp;
     const char *text;
 
-    if (s_cur == NULL)
-    {
-        bridge_raise("WEBUI_RETURN_STRING is valid only inside a bound handler");
-        return;
-    }
-    if (!bridge_arg_string(1, "text", &text))
+    if (!bridge_cur_event("WEBUI_RETURN_STRING", &tmp) || !bridge_arg_string(1, "text", &text))
     {
         return;
     }
-    if (s_cur_responded)
+    if (!bridge_claim_answer())
     {
         hb_retl(0);
         return;
     }
-    webui_return_string(s_cur->e, text);
-    s_cur_responded = 1;
+    webui_return_string(&tmp, text);
+    hb_retl(1);
+}
+
+/* WEBUI_INTERFACE_SET_RESPONSE( nWindow, nEvent, cText ) -> lSent. Works on any event of a
+ * window by number (the handler receives both as parameters 2 and 4). Returns .F. only when
+ * the event is the one being dispatched and it was answered already; for another event
+ * number the call is passed to WebUI, which ignores finished and unknown events. */
+void HB_FUN_WEBUI_INTERFACE_SET_RESPONSE(void)
+{
+    size_t window;
+    size_t number;
+    const char *text;
+
+    if (!bridge_arg_window(1, &window) || !bridge_arg_size(2, 0, (size_t) -1, "event number", &number) ||
+        !bridge_arg_string(3, "response", &text))
+    {
+        return;
+    }
+    if (!bridge_claim_event(window, number))
+    {
+        hb_retl(0);
+        return;
+    }
+    webui_interface_set_response(window, number, text);
     hb_retl(1);
 }
