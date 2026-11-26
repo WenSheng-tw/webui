@@ -9,6 +9,8 @@ PROCEDURE Main()
    cHtml := MemoRead( "ui/index.html" )
    IF Empty( cHtml )
       ? "ERROR: ui/index.html not found. Run this program from poc/harbour-webui."
+      ? "Press any key to exit."
+      Inkey( 0 )
       RETURN
    ENDIF
 
