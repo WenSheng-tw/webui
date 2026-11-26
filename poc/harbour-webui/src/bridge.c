@@ -24,6 +24,7 @@ extern void webui_return_string(webui_event_t *e, const char *s);
 
 /* Harbour subset, see hbapi.h, hbvm.h, hbapiitm.h, hbstack.h */
 extern void *hb_dynsymFind(const char *szName);
+extern int hb_dynsymIsFunction(void *pDynSym);
 extern void hb_vmPushDynSym(void *pDynSym);
 extern void hb_vmPushNil(void);
 extern void hb_vmPushString(const char *szText, size_t nLength);
@@ -91,7 +92,9 @@ void HB_FUN_WEBUI_BINDHB(void)
     const char *pszJsName;
     const char *pszHandler;
     char szName[BRIDGE_HANDLER_MAX];
+    void *pDynSym;
     size_t nLen;
+    size_t nBindId;
     size_t i;
 
     pszJsName = hb_parc(2);
@@ -115,12 +118,12 @@ void HB_FUN_WEBUI_BINDHB(void)
     }
     szName[nLen] = '\0';
 
-    if (hb_dynsymFind(szName) == NULL)
+    pDynSym = hb_dynsymFind(szName);
+    if (pDynSym == NULL || !hb_dynsymIsFunction(pDynSym))
     {
         hb_retni(0);
         return;
     }
-    memcpy(s_szHandler, szName, nLen + 1);
 
     /*
      * WebUI runs every callback in a new thread by default, but the Harbour
@@ -130,7 +133,12 @@ void HB_FUN_WEBUI_BINDHB(void)
      */
     webui_set_config(BRIDGE_CFG_UI_EVENT_BLOCKING, 1);
 
-    hb_retni((int) webui_bind((size_t) hb_parni(1), pszJsName, OnBoundCall));
+    nBindId = webui_bind((size_t) hb_parni(1), pszJsName, OnBoundCall);
+    if (nBindId != 0)
+    {
+        memcpy(s_szHandler, szName, nLen + 1);
+    }
+    hb_retni((int) nBindId);
 }
 
 /* WEBUI_WAIT() : blocks until all windows are closed */
