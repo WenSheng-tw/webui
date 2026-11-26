@@ -1,0 +1,10 @@
+
+new_window nonzero .T.
+show .T.
+wait NIL
+exit NIL
+clean .T.exit code 0
+
+real	0m11.401s
+user	0m0.067s
+sys	0m0.092s

@@ -1,0 +1,3 @@
+static library members (dist/libwebui-2-static.a), checked with nm and readelf:
+civetweb.o: __tsan refs=0, __asan refs=0, .debug_info sections=0
+webui.o: __tsan refs=0, __asan refs=0, .debug_info sections=0

@@ -1,0 +1,7 @@
+
+exit NIL
+RAISED: WEBUI_NEW_WINDOW: the application was exited; call WEBUI_CLEAN() first | WEBUI_NEW_WINDOW | subcode       3012
+clean .T.
+new_window (after clean) nonzero .T.
+exit NIL
+clean .T.exit code 0
