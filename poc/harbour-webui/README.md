@@ -55,6 +55,20 @@ hbmk2 prg/main.prg prg/hello.prg src/bridge.c \
 ./hbwebui
 ```
 
+## Windows 目錄配置
+
+Windows 上的建置以並排的資料夾為準：
+
+```
+d:\hbdev32\
+├── webui\              WebUI 函式庫（本倉庫），產出 dist\webui-2-static.lib
+├── harbour-webui\      本 PoC 應用程式（由 poc/harbour-webui 複製而來）
+├── harbour-core\       Harbour 原始碼與 bin\win\...
+└── bcc_x32.bat, vs2019-x32.bat, vs2019-x64.bat
+```
+
+以下 Windows 指令假設 PoC 位於 `d:\hbdev32\harbour-webui\`，WebUI 函式庫位於 `d:\hbdev32\webui\`。
+
 ## 建置：Windows（bcc_x32，待測）
 
 尚未驗證。步驟依 [ENVIRONMENT.md](../../docs/team/ENVIRONMENT.md) 整理，第一次測試時請回報實際結果，並校正下列指令。
@@ -65,9 +79,9 @@ cd d:\hbdev32
 call bcc_x32.bat
 
 rem 2. 建置 PoC
-cd d:\hbdev32\webui\poc\harbour-webui
+cd d:\hbdev32\harbour-webui
 d:\hbdev32\harbour-core\bin\win\bcc\hbmk2.exe prg\main.prg prg\hello.prg src\bridge.c ^
-  -I..\..\include -L..\..\dist -lwebui-2-static ^
+  -I..\webui\include -L..\webui\dist -lwebui-2-static ^
   -lws2_32 -lole32 -luser32 -ladvapi32 -lshell32 ^
   -ohbwebui.exe
 
@@ -88,9 +102,9 @@ call d:\hbdev32\vs2019-x32.bat
 nmake
 
 rem 2. 建置 PoC
-cd d:\hbdev32\webui\poc\harbour-webui
+cd d:\hbdev32\harbour-webui
 d:\hbdev32\harbour-core\bin\win\msvc\hbmk2.exe prg\main.prg prg\hello.prg src\bridge.c ^
-  -I..\..\include -L..\..\dist -lwebui-2-static ^
+  -I..\webui\include -L..\webui\dist -lwebui-2-static ^
   -lws2_32 -lole32 -luser32 -ladvapi32 -lshell32 ^
   -ohbwebui.exe
 
@@ -106,4 +120,4 @@ vs2019-x32 的 `hbmk2.exe` 問題已由使用者確認解決。若重新出現�
 
 - PoC 只支援單一綁定函式（`bridge.c` 中的 `s_szHandler`）。
 - 處理函式在 WebUI 執行緒中呼叫 Harbour VM。Linux 驗證無問題，但 Windows 上尚未驗證，也未確認 Harbour 是否為多執行緒建置。若出現異常，改為由主執行緒處理佇列。
-- 頁面需從 `poc/harbour-webui` 下啟動，才能讀到 `ui/index.html`。
+- 頁面需從 PoC 所在的資料夾下啟動，才能讀到 `ui/index.html`。
