@@ -1,0 +1,31 @@
+TAP version 13
+# qa_neg case show, Harbour 3.2.0 (r2607071000)
+# show(content NIL value) rejected: content: a string is required
+ok 1 - show(content NIL value) rejected
+# show(content logical value) rejected: content: a string is required
+ok 2 - show(content logical value) rejected
+# show(content array value) rejected: content: a string is required
+ok 3 - show(content array value) rejected
+# show(content hash value) rejected: content: a string is required
+ok 4 - show(content hash value) rejected
+# show(content codeblock value) rejected: content: a string is required
+ok 5 - show(content codeblock value) rejected
+# show(content date value) rejected: content: a string is required
+ok 6 - show(content date value) rejected
+# show(content number) rejected: content: a string is required
+ok 7 - show(content number) rejected
+# show(content NaN) rejected: content: a string is required
+ok 8 - show(content NaN) rejected
+# show(content with NUL) rejected: content: must not contain a NUL byte
+ok 9 - show(content with NUL) rejected
+# show(window) without content rejected: content: a string is required
+ok 10 - show(window) without content rejected
+# show() rejected: window id: a number is required
+ok 11 - show() rejected
+# close() rejected: window id: a number is required
+ok 12 - close() rejected
+# bind() rejected: window id: a number is required
+ok 13 - bind() rejected
+ok 14 - clean after the rejected shows
+ok 15 - case show reached its end without a crash
+1..15

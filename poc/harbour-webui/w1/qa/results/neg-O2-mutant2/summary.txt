@@ -1,0 +1,8 @@
+FAIL: case timeout exit 1, 31 ok, 9 not ok (see build/O2-mutant2/timeout.tap, build/O2-mutant2/timeout.err)
+FAIL: case config exit 1, 47 ok, 9 not ok (see build/O2-mutant2/config.tap, build/O2-mutant2/config.err)
+FAIL: case window exit 1, 106 ok, 8 not ok (see build/O2-mutant2/window.tap, build/O2-mutant2/window.err)
+ok: case bind (35 ok, 0 not ok, exit 0)
+ok: case show (15 ok, 0 not ok, exit 0)
+ok: case state (50 ok, 0 not ok, exit 0)
+ok: case table (5 ok, 0 not ok, exit 0)
+== O2 mutant2: 289 ok in total, FAILED

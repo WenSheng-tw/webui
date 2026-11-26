@@ -1,0 +1,96 @@
+TAP version 13
+# qa_neg case config, Harbour 3.2.0 (r2607071000)
+# set_config(option 5) unknown or bridge-owned enum: option: asynchronous_response is managed by the bridge
+ok 1 - set_config(option 5) unknown or bridge-owned enum
+not ok 2 - set_config(option 6) unknown or bridge-owned enum
+not ok 3 - set_config(option 7) unknown or bridge-owned enum
+not ok 4 - set_config(option 8) unknown or bridge-owned enum
+not ok 5 - set_config(option 100) unknown or bridge-owned enum
+not ok 6 - set_config(option 255) unknown or bridge-owned enum
+not ok 7 - set_config(option 256) unknown or bridge-owned enum
+not ok 8 - set_config(option 65535) unknown or bridge-owned enum
+not ok 9 - set_config(option 65536) unknown or bridge-owned enum
+not ok 10 - set_config(option 4294967296.00) unknown or bridge-owned enum
+# set_config(option NaN) rejected: option: not an integer between 0 and 2^53
+ok 11 - set_config(option NaN) rejected
+# set_config(option -NaN) rejected: option: not an integer between 0 and 2^53
+ok 12 - set_config(option -NaN) rejected
+# set_config(option +inf) rejected: option: not an integer between 0 and 2^53
+ok 13 - set_config(option +inf) rejected
+# set_config(option -inf) rejected: option: not an integer between 0 and 2^53
+ok 14 - set_config(option -inf) rejected
+# set_config(option 2^53+2) rejected: option: not an integer between 0 and 2^53
+ok 15 - set_config(option 2^53+2) rejected
+# set_config(option 2^63) rejected: option: not an integer between 0 and 2^53
+ok 16 - set_config(option 2^63) rejected
+# set_config(option 2^64) rejected: option: not an integer between 0 and 2^53
+ok 17 - set_config(option 2^64) rejected
+# set_config(option -2^63) rejected: option: not an integer between 0 and 2^53
+ok 18 - set_config(option -2^63) rejected
+# set_config(option DBL_MAX) rejected: option: not an integer between 0 and 2^53
+ok 19 - set_config(option DBL_MAX) rejected
+# set_config(option denormal) rejected: option: not an integer between 0 and 2^53
+ok 20 - set_config(option denormal) rejected
+# set_config(option -1) rejected: option: not an integer between 0 and 2^53
+ok 21 - set_config(option -1) rejected
+# set_config(option -0.5) rejected: option: not an integer between 0 and 2^53
+ok 22 - set_config(option -0.5) rejected
+# set_config(option 0.5) rejected: option: not an integer between 0 and 2^53
+ok 23 - set_config(option 0.5) rejected
+# set_config(option 1.0000001) rejected: option: not an integer between 0 and 2^53
+ok 24 - set_config(option 1.0000001) rejected
+# set_config(option -1e300) rejected: option: not an integer between 0 and 2^53
+ok 25 - set_config(option -1e300) rejected
+# set_config(option 1e300) rejected: option: not an integer between 0 and 2^53
+ok 26 - set_config(option 1e300) rejected
+# set_config(option -1000000) rejected: option: not an integer between 0 and 2^53
+ok 27 - set_config(option -1000000) rejected
+# set_config(option string value) rejected: option: a number is required
+ok 28 - set_config(option string value) rejected
+# set_config(0, status string value) rejected: a logical value is required
+ok 29 - set_config(0, status string value) rejected
+# set_config(option NIL value) rejected: option: a number is required
+ok 30 - set_config(option NIL value) rejected
+# set_config(0, status NIL value) rejected: a logical value is required
+ok 31 - set_config(0, status NIL value) rejected
+# set_config(option logical value) rejected: option: a number is required
+ok 32 - set_config(option logical value) rejected
+# set_config(option array value) rejected: option: a number is required
+ok 33 - set_config(option array value) rejected
+# set_config(0, status array value) rejected: a logical value is required
+ok 34 - set_config(0, status array value) rejected
+# set_config(option hash value) rejected: option: a number is required
+ok 35 - set_config(option hash value) rejected
+# set_config(0, status hash value) rejected: a logical value is required
+ok 36 - set_config(0, status hash value) rejected
+# set_config(option codeblock value) rejected: option: a number is required
+ok 37 - set_config(option codeblock value) rejected
+# set_config(0, status codeblock value) rejected: a logical value is required
+ok 38 - set_config(0, status codeblock value) rejected
+# set_config(option date value) rejected: option: a number is required
+ok 39 - set_config(option date value) rejected
+# set_config(0, status date value) rejected: a logical value is required
+ok 40 - set_config(0, status date value) rejected
+# set_config(0, 1) numeric status rejected: a logical value is required
+ok 41 - set_config(0, 1) numeric status rejected
+# set_config(0, 0) numeric status rejected: a logical value is required
+ok 42 - set_config(0, 0) numeric status rejected
+# set_config(0, NaN) rejected: a logical value is required
+ok 43 - set_config(0, NaN) rejected
+# set_config(0) without status rejected: a logical value is required
+ok 44 - set_config(0) without status rejected
+# set_config() rejected: option: a number is required
+ok 45 - set_config() rejected
+ok 46 - set_config(0, .T.) accepted
+ok 47 - set_config(0, .F.) accepted
+ok 48 - set_config(1, .T.) accepted
+ok 49 - set_config(1, .F.) accepted
+ok 50 - set_config(2, .T.) accepted
+ok 51 - set_config(2, .F.) accepted
+ok 52 - set_config(3, .T.) accepted
+ok 53 - set_config(3, .F.) accepted
+ok 54 - set_config(4, .T.) accepted
+ok 55 - set_config(4, .F.) accepted
+ok 56 - case config reached its end without a crash
+1..56
+# FAILED 9 of 56

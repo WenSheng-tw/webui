@@ -1,0 +1,201 @@
+TAP version 13
+# qa_neg case window, Harbour 3.2.0 (r2607071000)
+# bind(window NaN) rejected: window id: not an integer between 0 and 2^53
+ok 1 - bind(window NaN) rejected
+# show(window NaN) rejected: window id: not an integer between 0 and 2^53
+ok 2 - show(window NaN) rejected
+# close(window NaN) rejected: window id: not an integer between 0 and 2^53
+ok 3 - close(window NaN) rejected
+# bind(window -NaN) rejected: window id: not an integer between 0 and 2^53
+ok 4 - bind(window -NaN) rejected
+# show(window -NaN) rejected: window id: not an integer between 0 and 2^53
+ok 5 - show(window -NaN) rejected
+# close(window -NaN) rejected: window id: not an integer between 0 and 2^53
+ok 6 - close(window -NaN) rejected
+# bind(window +inf) rejected: window id: not an integer between 0 and 2^53
+ok 7 - bind(window +inf) rejected
+# show(window +inf) rejected: window id: not an integer between 0 and 2^53
+ok 8 - show(window +inf) rejected
+# close(window +inf) rejected: window id: not an integer between 0 and 2^53
+ok 9 - close(window +inf) rejected
+# bind(window -inf) rejected: window id: not an integer between 0 and 2^53
+ok 10 - bind(window -inf) rejected
+# show(window -inf) rejected: window id: not an integer between 0 and 2^53
+ok 11 - show(window -inf) rejected
+# close(window -inf) rejected: window id: not an integer between 0 and 2^53
+ok 12 - close(window -inf) rejected
+# bind(window 2^53+2) rejected: window id: not an integer between 0 and 2^53
+ok 13 - bind(window 2^53+2) rejected
+# show(window 2^53+2) rejected: window id: not an integer between 0 and 2^53
+ok 14 - show(window 2^53+2) rejected
+# close(window 2^53+2) rejected: window id: not an integer between 0 and 2^53
+ok 15 - close(window 2^53+2) rejected
+# bind(window 2^63) rejected: window id: not an integer between 0 and 2^53
+ok 16 - bind(window 2^63) rejected
+# show(window 2^63) rejected: window id: not an integer between 0 and 2^53
+ok 17 - show(window 2^63) rejected
+# close(window 2^63) rejected: window id: not an integer between 0 and 2^53
+ok 18 - close(window 2^63) rejected
+# bind(window 2^64) rejected: window id: not an integer between 0 and 2^53
+ok 19 - bind(window 2^64) rejected
+# show(window 2^64) rejected: window id: not an integer between 0 and 2^53
+ok 20 - show(window 2^64) rejected
+# close(window 2^64) rejected: window id: not an integer between 0 and 2^53
+ok 21 - close(window 2^64) rejected
+# bind(window -2^63) rejected: window id: not an integer between 0 and 2^53
+ok 22 - bind(window -2^63) rejected
+# show(window -2^63) rejected: window id: not an integer between 0 and 2^53
+ok 23 - show(window -2^63) rejected
+# close(window -2^63) rejected: window id: not an integer between 0 and 2^53
+ok 24 - close(window -2^63) rejected
+# bind(window DBL_MAX) rejected: window id: not an integer between 0 and 2^53
+ok 25 - bind(window DBL_MAX) rejected
+# show(window DBL_MAX) rejected: window id: not an integer between 0 and 2^53
+ok 26 - show(window DBL_MAX) rejected
+# close(window DBL_MAX) rejected: window id: not an integer between 0 and 2^53
+ok 27 - close(window DBL_MAX) rejected
+# bind(window denormal) rejected: window id: not an integer between 0 and 2^53
+ok 28 - bind(window denormal) rejected
+# show(window denormal) rejected: window id: not an integer between 0 and 2^53
+ok 29 - show(window denormal) rejected
+# close(window denormal) rejected: window id: not an integer between 0 and 2^53
+ok 30 - close(window denormal) rejected
+# bind(window -1) rejected: window id: not an integer between 0 and 2^53
+ok 31 - bind(window -1) rejected
+# show(window -1) rejected: window id: not an integer between 0 and 2^53
+ok 32 - show(window -1) rejected
+# close(window -1) rejected: window id: not an integer between 0 and 2^53
+ok 33 - close(window -1) rejected
+# bind(window -0.5) rejected: window id: not an integer between 0 and 2^53
+ok 34 - bind(window -0.5) rejected
+# show(window -0.5) rejected: window id: not an integer between 0 and 2^53
+ok 35 - show(window -0.5) rejected
+# close(window -0.5) rejected: window id: not an integer between 0 and 2^53
+ok 36 - close(window -0.5) rejected
+# bind(window 0.5) rejected: window id: not an integer between 0 and 2^53
+ok 37 - bind(window 0.5) rejected
+# show(window 0.5) rejected: window id: not an integer between 0 and 2^53
+ok 38 - show(window 0.5) rejected
+# close(window 0.5) rejected: window id: not an integer between 0 and 2^53
+ok 39 - close(window 0.5) rejected
+# bind(window 1.0000001) rejected: window id: not an integer between 0 and 2^53
+ok 40 - bind(window 1.0000001) rejected
+# show(window 1.0000001) rejected: window id: not an integer between 0 and 2^53
+ok 41 - show(window 1.0000001) rejected
+# close(window 1.0000001) rejected: window id: not an integer between 0 and 2^53
+ok 42 - close(window 1.0000001) rejected
+# bind(window -1e300) rejected: window id: not an integer between 0 and 2^53
+ok 43 - bind(window -1e300) rejected
+# show(window -1e300) rejected: window id: not an integer between 0 and 2^53
+ok 44 - show(window -1e300) rejected
+# close(window -1e300) rejected: window id: not an integer between 0 and 2^53
+ok 45 - close(window -1e300) rejected
+# bind(window 1e300) rejected: window id: not an integer between 0 and 2^53
+ok 46 - bind(window 1e300) rejected
+# show(window 1e300) rejected: window id: not an integer between 0 and 2^53
+ok 47 - show(window 1e300) rejected
+# close(window 1e300) rejected: window id: not an integer between 0 and 2^53
+ok 48 - close(window 1e300) rejected
+# bind(window -1000000) rejected: window id: not an integer between 0 and 2^53
+ok 49 - bind(window -1000000) rejected
+# show(window -1000000) rejected: window id: not an integer between 0 and 2^53
+ok 50 - show(window -1000000) rejected
+# close(window -1000000) rejected: window id: not an integer between 0 and 2^53
+ok 51 - close(window -1000000) rejected
+# bind(window 0) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 52 - bind(window 0) rejected
+not ok 53 - show(window 0) rejected
+not ok 54 - close(window 0) rejected
+# bind(window 65536) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 55 - bind(window 65536) rejected
+not ok 56 - show(window 65536) rejected
+not ok 57 - close(window 65536) rejected
+# bind(window 1e9) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 58 - bind(window 1e9) rejected
+not ok 59 - show(window 1e9) rejected
+not ok 60 - close(window 1e9) rejected
+# bind(window 2^53) rejected: handler: not a Harbour function (add REQUEST) or bind failed
+ok 61 - bind(window 2^53) rejected
+not ok 62 - show(window 2^53) rejected
+not ok 63 - close(window 2^53) rejected
+# bind(window string value) rejected: window id: a number is required
+ok 64 - bind(window string value) rejected
+# show(window string value) rejected: window id: a number is required
+ok 65 - show(window string value) rejected
+# close(window string value) rejected: window id: a number is required
+ok 66 - close(window string value) rejected
+# bind(window NIL value) rejected: window id: a number is required
+ok 67 - bind(window NIL value) rejected
+# show(window NIL value) rejected: window id: a number is required
+ok 68 - show(window NIL value) rejected
+# close(window NIL value) rejected: window id: a number is required
+ok 69 - close(window NIL value) rejected
+# bind(window logical value) rejected: window id: a number is required
+ok 70 - bind(window logical value) rejected
+# show(window logical value) rejected: window id: a number is required
+ok 71 - show(window logical value) rejected
+# close(window logical value) rejected: window id: a number is required
+ok 72 - close(window logical value) rejected
+# bind(window array value) rejected: window id: a number is required
+ok 73 - bind(window array value) rejected
+# show(window array value) rejected: window id: a number is required
+ok 74 - show(window array value) rejected
+# close(window array value) rejected: window id: a number is required
+ok 75 - close(window array value) rejected
+# bind(window hash value) rejected: window id: a number is required
+ok 76 - bind(window hash value) rejected
+# show(window hash value) rejected: window id: a number is required
+ok 77 - show(window hash value) rejected
+# close(window hash value) rejected: window id: a number is required
+ok 78 - close(window hash value) rejected
+# bind(window codeblock value) rejected: window id: a number is required
+ok 79 - bind(window codeblock value) rejected
+# show(window codeblock value) rejected: window id: a number is required
+ok 80 - show(window codeblock value) rejected
+# close(window codeblock value) rejected: window id: a number is required
+ok 81 - close(window codeblock value) rejected
+# bind(window date value) rejected: window id: a number is required
+ok 82 - bind(window date value) rejected
+# show(window date value) rejected: window id: a number is required
+ok 83 - show(window date value) rejected
+# close(window date value) rejected: window id: a number is required
+ok 84 - close(window date value) rejected
+# bind(unused window 1) raises, no crash: handler: not a Harbour function (add REQUEST) or bind failed
+ok 85 - bind(unused window 1) raises, no crash
+ok 86 - show(unused window 1) does not raise
+ok 87 - show(unused window 1) returns .F.
+ok 88 - close(unused window 1) does nothing
+# bind(unused window 2) raises, no crash: handler: not a Harbour function (add REQUEST) or bind failed
+ok 89 - bind(unused window 2) raises, no crash
+ok 90 - show(unused window 2) does not raise
+ok 91 - show(unused window 2) returns .F.
+ok 92 - close(unused window 2) does nothing
+# bind(unused window 255) raises, no crash: handler: not a Harbour function (add REQUEST) or bind failed
+ok 93 - bind(unused window 255) raises, no crash
+ok 94 - show(unused window 255) does not raise
+ok 95 - show(unused window 255) returns .F.
+ok 96 - close(unused window 255) does nothing
+# bind(unused window 256) raises, no crash: handler: not a Harbour function (add REQUEST) or bind failed
+ok 97 - bind(unused window 256) raises, no crash
+ok 98 - show(unused window 256) does not raise
+ok 99 - show(unused window 256) returns .F.
+ok 100 - close(unused window 256) does nothing
+# bind(unused window 257) raises, no crash: handler: not a Harbour function (add REQUEST) or bind failed
+ok 101 - bind(unused window 257) raises, no crash
+ok 102 - show(unused window 257) does not raise
+ok 103 - show(unused window 257) returns .F.
+ok 104 - close(unused window 257) does nothing
+# bind(unused window 65534) raises, no crash: handler: not a Harbour function (add REQUEST) or bind failed
+ok 105 - bind(unused window 65534) raises, no crash
+ok 106 - show(unused window 65534) does not raise
+ok 107 - show(unused window 65534) returns .F.
+ok 108 - close(unused window 65534) does nothing
+# bind(unused window 65535) raises, no crash: handler: not a Harbour function (add REQUEST) or bind failed
+ok 109 - bind(unused window 65535) raises, no crash
+ok 110 - show(unused window 65535) does not raise
+ok 111 - show(unused window 65535) returns .F.
+ok 112 - close(unused window 65535) does nothing
+ok 113 - legacy WEBUI_BINDHB returns 0 for NaN, -1 and 2^64
+ok 114 - case window reached its end without a crash
+1..114
+# FAILED 8 of 114
